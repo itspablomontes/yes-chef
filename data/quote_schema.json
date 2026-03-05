@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Catering Quote",
+  "description": "Per-unit pricing quote for a catering event. Each menu item is broken into component ingredients with costs sourced from the Sysco catalog where available.",
+  "type": "object",
+  "required": ["quote_id", "event", "generated_at", "line_items"],
+  "properties": {
+    "quote_id": {
+      "type": "string",
+      "description": "Unique identifier for this quote"
+    },
+    "event": {
+      "type": "string",
+      "description": "Name of the event from the menu specification"
+    },
+    
+    "line_items": {
+      "type": "array",
+      "description": "One entry per menu item from the specification",
+      "items": {
+        "type": "object",
+        "required": [
+          "item_name",
+          "category",
+          "ingredients",
+          "ingredient_cost_per_unit"
+        ],
+        "properties": {
+          "item_name": {
+            "type": "string",
+            "description": "Menu item name as it appears in the specification"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["appetizers", "main_plates", "desserts", "cocktails"],
+            "description": "Category from the menu specification"
+          },
+          "ingredients": {
+            "type": "array",
+            "description": "Component ingredients the agent identified for this dish",
+            "items": {
+              "type": "object",
+              "required": ["name", "quantity", "unit_cost", "source"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Ingredient name"
+                },
+                "quantity": {
+                  "type": "string",
+                  "description": "Estimated quantity per serving (e.g., '8 oz', '2 each', '0.5 tbsp')"
+                },
+                "unit_cost": {
+                  "type": ["number", "null"],
+                  "description": "Cost for the specified quantity. Null if unavailable."
+                },
+                "source": {
+                  "type": "string",
+                  "enum": ["sysco_catalog", "estimated", "not_available"],
+                  "description": "Where the price came from. 'sysco_catalog' if matched in the provided CSV. 'estimated' if the agent made a reasonable estimate. 'not_available' if the item could not be priced."
+                },
+                "sysco_item_number": {
+                  "type": ["string", "null"],
+                  "description": "Sysco Item Number from the catalog, if matched. Null otherwise."
+                }
+              }
+            }
+          },
+          "ingredient_cost_per_unit": {
+            "type": "number",
+            "description": "Total ingredient cost per serving, summing all ingredient unit_costs."
+          }
+        }
+      }
+    }
+  }
+}

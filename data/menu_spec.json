@@ -1,0 +1,186 @@
+{
+  "event": "Anderson-Lee Wedding Reception",
+  "date": "2025-09-20",
+  "venue": "The Estate at Malibu Canyon",
+  "guest_count_estimate": 175,
+  "notes": "Formal plated dinner with cocktail hour. Couple requests emphasis on locally sourced and seasonal ingredients where possible. Several guests with dietary restrictions noted below.",
+  "categories": {
+    "appetizers": [
+      {
+        "name": "Bacon-Wrapped Scallops",
+        "description": "Pan-seared diver scallops wrapped in applewood-smoked bacon, finished with a maple bourbon glaze",
+        "dietary_notes": "GF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Wagyu Beef Tartare",
+        "description": "Hand-cut A5 wagyu beef tartare with quail egg yolk, capers, shallots, and truffle aioli on toasted crostini",
+        "dietary_notes": null,
+        "service_style": "passed"
+      },
+      {
+        "name": "Truffle Arancini",
+        "description": "Crispy risotto balls filled with black truffle and fontina cheese, served with San Marzano marinara dipping sauce",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      },
+      {
+        "name": "Sesame Ahi Tuna Bites",
+        "description": "Sesame-crusted sashimi-grade ahi tuna on wonton crisps with wasabi cream, pickled ginger, and soy reduction",
+        "dietary_notes": "DF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Burrata & Prosciutto Crostini",
+        "description": "Creamy burrata cheese, aged prosciutto di Parma, fig jam, and micro arugula on grilled sourdough",
+        "dietary_notes": null,
+        "service_style": "passed"
+      },
+      {
+        "name": "Lobster Bisque Shooters",
+        "description": "Smooth lobster bisque served in shot glasses, topped with creme fraiche, chive oil, and a pinch of smoked paprika",
+        "dietary_notes": "GF",
+        "service_style": "stationary"
+      },
+      {
+        "name": "Lamb Lollipops",
+        "description": "Grilled New Zealand lamb rib chops with rosemary-mint chimichurri and pomegranate molasses drizzle",
+        "dietary_notes": "GF, DF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Wild Mushroom & Gruyere Tartlets",
+        "description": "Sauteed wild mushroom duxelles with aged Gruyere in golden puff pastry tartlet shells",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      },
+      {
+        "name": "Hamachi Crudo",
+        "description": "Yellowtail hamachi with yuzu vinaigrette, thinly sliced jalapeno, fresh cilantro, and Maldon sea salt on crispy rice cakes",
+        "dietary_notes": "GF, DF",
+        "service_style": "stationary"
+      }
+    ],
+    "main_plates": [
+      {
+        "name": "Filet Mignon",
+        "description": "8oz center-cut filet mignon with roasted garlic compound butter, truffle mashed potatoes, and grilled asparagus with hollandaise",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Pan-Seared Chilean Sea Bass",
+        "description": "Chilean sea bass fillet with saffron beurre blanc, roasted fingerling potatoes, and French haricots verts with shallot butter",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Herb-Crusted Rack of Lamb",
+        "description": "New Zealand rack of lamb with Dijon herb crust, rosemary red wine jus, potato dauphinoise, and roasted root vegetables",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Wagyu New York Strip",
+        "description": "10oz Japanese A5 wagyu New York strip with bone marrow butter, roasted garlic confit, charred broccolini, and black truffle jus",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Roasted Duck Breast",
+        "description": "Pan-roasted Muscovy duck breast with cherry port wine reduction, wild rice pilaf, and sauteed Swiss chard with golden raisins",
+        "dietary_notes": "GF, DF"
+      },
+      {
+        "name": "Surf & Turf",
+        "description": "Butter-poached Maine lobster tail paired with 6oz filet mignon, bearnaise sauce, loaded twice-baked potato, and grilled asparagus",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Cedar-Planked Wild Salmon",
+        "description": "Wild Alaskan sockeye salmon on cedar plank with dill cream sauce, lemon-herb quinoa pilaf, and roasted seasonal vegetables",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Wild Mushroom & Truffle Risotto",
+        "description": "Arborio rice with sauteed wild mushrooms, shaved black truffle, aged Parmigiano-Reggiano, and white truffle oil finish",
+        "dietary_notes": "V, GF"
+      }
+    ],
+    "desserts": [
+      {
+        "name": "Classic Creme Brulee",
+        "description": "Tahitian vanilla bean creme brulee with fresh seasonal berries and a butter shortbread cookie",
+        "dietary_notes": "GF (without cookie)"
+      },
+      {
+        "name": "Valrhona Chocolate Fondant",
+        "description": "Warm Valrhona 70% dark chocolate fondant with raspberry coulis, edible gold leaf, and Madagascar vanilla bean ice cream",
+        "dietary_notes": null
+      },
+      {
+        "name": "Classic Tiramisu",
+        "description": "Traditional Italian tiramisu with espresso-soaked Savoiardi ladyfingers, mascarpone cream, and Dutch cocoa dusting",
+        "dietary_notes": null
+      },
+      {
+        "name": "Meyer Lemon Tart",
+        "description": "Meyer lemon curd tart with toasted Italian meringue, candied lemon zest, and edible flowers on a butter shortcrust",
+        "dietary_notes": "V"
+      },
+      {
+        "name": "Saffron Panna Cotta",
+        "description": "Saffron-infused panna cotta with crushed pistachio crumble, rosewater syrup, and candied rose petals",
+        "dietary_notes": "GF, V"
+      },
+      {
+        "name": "Chocolate Truffle Trio",
+        "description": "Handcrafted dark, milk, and white chocolate truffles finished with Fleur de Sel, espresso, and champagne flavors",
+        "dietary_notes": "GF, V"
+      },
+      {
+        "name": "Wedding Cake (Per Slice)",
+        "description": "Three-tier vanilla genoise and champagne cake with Swiss buttercream frosting, fresh flowers, and gold leaf detail",
+        "dietary_notes": "V"
+      }
+    ],
+    "cocktails": [
+      {
+        "name": "Lavender French 75",
+        "description": "Hendrick's gin, fresh lemon juice, house-made lavender simple syrup, topped with Veuve Clicquot champagne",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Smoked Old Fashioned",
+        "description": "Woodford Reserve bourbon, Demerara sugar cube, Angostura and orange bitters, expressed orange peel, applewood smoke finish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Espresso Martini",
+        "description": "Grey Goose vodka, Kahlua coffee liqueur, freshly pulled espresso shot, vanilla simple syrup, three coffee bean garnish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Elderflower Spritz",
+        "description": "St-Germain elderflower liqueur, La Marca prosecco, soda water, fresh cucumber ribbon and mint sprig",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Spicy Mezcal Margarita",
+        "description": "Del Maguey Vida mezcal, Cointreau, fresh lime juice, agave nectar, muddled jalapeno, Tajin rim",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Japanese Whisky Highball",
+        "description": "Suntory Toki Japanese whisky, chilled sparkling water, expressed lemon peel, served in a tall frozen glass",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Rose Sangria",
+        "description": "Whispering Angel rose wine, Chambord black raspberry liqueur, white peach puree, fresh seasonal berries, and mint",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Garden Spritz (Non-Alcoholic)",
+        "description": "Seedlip Garden 108, Fever-Tree elderflower tonic, fresh cucumber, rosemary sprig, and a squeeze of grapefruit",
+        "dietary_notes": "V, GF, NA"
+      }
+    ]
+  }
+}
