@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Protocol
 
+from app.application.runtime.event_contract_validator import EventContractValidator
 from app.domain.entities import ItemResult
 from app.domain.repositories import EstimationRepository, ItemResultRepository
 from app.domain.value_objects import EstimationStatus
@@ -47,11 +48,16 @@ class ProgressObserver:
     ) -> None:
         self._estimation_repo = estimation_repo
         self._item_result_repo = item_result_repo
+        self._event_validator = EventContractValidator()
 
     async def on_item_complete(
         self, estimation_id: str, item_data: dict[str, Any]
     ) -> None:
         """Persist a completed item result and update progress."""
+        self._event_validator.validate(
+            {"event": "item_complete", "data": item_data}
+        )
+
         import uuid
         from datetime import datetime
 
@@ -77,6 +83,11 @@ class ProgressObserver:
             ingredients=ingredients,
             ingredient_cost_per_unit=float(item_data.get("ingredient_cost_per_unit") or 0.0),
             item_key=str(item_data.get("item_key")) if item_data.get("item_key") else None,
+            telemetry_json=(
+                item_data.get("telemetry")
+                if isinstance(item_data.get("telemetry"), dict)
+                else {}
+            ),
             status=str(item_data.get("status", "completed")),
             completed_at=datetime.now(),
         )

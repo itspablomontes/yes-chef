@@ -7,6 +7,7 @@ Uses Entity-Model mapper pattern: domain entities ↔ SQLAlchemy models.
 from __future__ import annotations
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import EstimationJob, ItemResult
@@ -117,9 +118,22 @@ class PostgresItemResultRepository:
 
         model = self._to_model(result)
         self._session.add(model)
-        await self._session.commit()
-        await self._session.refresh(model)
-        return self._to_entity(model)
+        try:
+            await self._session.commit()
+            await self._session.refresh(model)
+            return self._to_entity(model)
+        except IntegrityError:
+            await self._session.rollback()
+            existing_result = await self._session.execute(
+                select(ItemResultModel).where(
+                    ItemResultModel.estimation_id == result.estimation_id,
+                    ItemResultModel.item_key == result.item_key,
+                )
+            )
+            existing_model = existing_result.scalar_one_or_none()
+            if existing_model is not None:
+                return self._to_entity(existing_model)
+            raise
 
     async def get_by_estimation(
         self, estimation_id: str
@@ -151,6 +165,7 @@ class PostgresItemResultRepository:
             category=entity.category,
             item_key=entity.item_key,
             ingredients_json=ingredients_json,
+            telemetry_json=entity.telemetry_json,
             ingredient_cost_per_unit=entity.ingredient_cost_per_unit,
             status=entity.status,
             completed_at=entity.completed_at,
@@ -180,6 +195,7 @@ class PostgresItemResultRepository:
             ingredients=ingredients,
             ingredient_cost_per_unit=model.ingredient_cost_per_unit,
             item_key=model.item_key,
+            telemetry_json=model.telemetry_json,
             status=model.status,
             completed_at=model.completed_at,
         )

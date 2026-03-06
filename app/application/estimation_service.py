@@ -89,6 +89,7 @@ class EstimationService:
             "menu_spec": menu_spec,
             "completed_items": align_completed_items(menu_spec, []),
             "knowledge_store": {},
+            "memo_store": {},
             "status": "in_progress",
         }
 
@@ -131,6 +132,7 @@ class EstimationService:
                 "item_name": item.item_name,
                 "category": item.category,
                 "item_key": item.item_key,
+                "telemetry": item.telemetry_json,
                 "ingredients": [
                     {
                         "name": ic.name,
@@ -161,6 +163,7 @@ class EstimationService:
             "menu_spec": job.menu_spec_json,
             "completed_items": completed_dicts,
             "knowledge_store": knowledge.get_hints(),
+            "memo_store": {},
             "status": "in_progress",
         }
 

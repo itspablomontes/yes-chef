@@ -6,13 +6,13 @@ State is ephemeral (created per estimation), graph is a singleton.
 
 from __future__ import annotations
 
-from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 
 from app.agent.nodes.batch_router import route_work_item
 from app.agent.nodes.batch_worker import ItemWorkerNode
 from app.agent.nodes.reduce import reduce
 from app.agent.state import EstimationState
+from app.infrastructure.llm_client import LLMClient
 
 
 class GraphBuilder:
@@ -24,14 +24,17 @@ class GraphBuilder:
     fresh state injected at runtime.
     """
 
-    def __init__(self, llm: ChatOpenAI) -> None:
-        self._llm = llm
+    def __init__(self, llm_client: LLMClient) -> None:
+        self._llm_client = llm_client
 
     def build(self) -> StateGraph:
         """Build and return the state graph (not yet compiled)."""
         graph = StateGraph(EstimationState)
 
-        item_worker_node = ItemWorkerNode(llm=self._llm)
+        item_worker_node = ItemWorkerNode(
+            llm=self._llm_client.main_model,
+            repair_llm=self._llm_client.repair_model,
+        )
 
         # Add nodes
         graph.add_node("item_worker", item_worker_node)

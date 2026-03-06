@@ -55,5 +55,10 @@ class EstimationState(BaseModel):
     menu_spec: dict[str, Any] = Field(default_factory=dict)
     completed_items: Annotated[list[dict[str, Any]], _add_items] = Field(default_factory=list)
     knowledge_store: dict[str, str] = Field(default_factory=dict)
+    memo_store: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    global_catalog_cache: dict[str, dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Shared catalog resolution cache across menu items (normalized_name -> match)",
+    )
     status: str = "pending"
     quote: dict[str, Any] = Field(default_factory=dict)

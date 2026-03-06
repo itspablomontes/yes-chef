@@ -91,5 +91,6 @@ class ItemResult:
     ingredients: list[IngredientCost]
     ingredient_cost_per_unit: float
     item_key: str | None = None
+    telemetry_json: dict[str, object] = field(default_factory=dict)
     status: str = "completed"
     completed_at: datetime = field(default_factory=datetime.now)

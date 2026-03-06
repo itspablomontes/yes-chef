@@ -1,0 +1,24 @@
+{
+  "event": "Smoke Test Event",
+  "date": "2026-03-06",
+  "venue": "Test Kitchen",
+  "guest_count_estimate": 12,
+  "notes": "Small smoke run",
+  "categories": {
+    "appetizers": [
+      {
+        "name": "Bacon-Wrapped Scallops",
+        "description": "Pan-seared diver scallops wrapped in applewood-smoked bacon, finished with a maple bourbon glaze",
+        "dietary_notes": "GF",
+        "service_style": "passed"
+      }
+    ],
+    "main_plates": [
+      {
+        "name": "Wild Mushroom & Truffle Risotto",
+        "description": "Arborio rice with sauteed wild mushrooms, shaved black truffle, aged Parmigiano-Reggiano, and white truffle oil finish",
+        "dietary_notes": "V, GF"
+      }
+    ]
+  }
+}

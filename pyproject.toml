@@ -17,9 +17,8 @@ dependencies = [
     "rapidfuzz>=3.0.0",
     "python-dotenv>=1.0.0",
     "alembic>=1.14.0",
-    "chromadb>=1.5.2",
-    "numpy>=2.4.2",
     "httpx>=0.28.1",
+    "jsonschema>=4.0.0",
     "rich>=14.3.3",
     "aiosqlite>=0.22.1",
 ]

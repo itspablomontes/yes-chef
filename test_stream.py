@@ -52,6 +52,7 @@ class StreamRunState:
     final_status: str = "streaming"
     quote_received: bool = False
     errors: list[str] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
 
 
 def format_elapsed(seconds: float) -> str:
@@ -149,6 +150,12 @@ def apply_stream_event(state: StreamRunState, event_payload: dict[str, Any]) -> 
     if event_type == "quote_complete":
         state.quote_received = True
         state.active_tool = "Finalizing quote"
+        return
+
+    if event_type == "estimation_metrics":
+        state.metrics = data
+        total_tokens = data.get("total_tokens", 0)
+        state.active_tool = f"Run metrics ready (tokens: {total_tokens})"
         return
 
     if event_type == "estimation_complete":
@@ -293,6 +300,7 @@ def build_run_summary(
         "schema_error": schema_error,
         "missing_ingredients": missing_ingredients,
         "runtime_errors": list(state.errors),
+        "metrics": dict(state.metrics),
     }
 
 
@@ -354,6 +362,16 @@ def print_run_summary(summary: dict[str, Any]) -> None:
         f"Schema valid: {'yes' if summary['schema_valid'] else 'no'}",
         f"Missing ingredients flagged: {summary['missing_ingredients']}",
     ]
+    metrics = summary.get("metrics", {})
+    if isinstance(metrics, dict) and metrics:
+        lines.append("Run metrics:")
+        lines.append(f"- total tokens: {metrics.get('total_tokens', 0)}")
+        lines.append(f"- prompt tokens: {metrics.get('prompt_tokens', 0)}")
+        lines.append(f"- completion tokens: {metrics.get('completion_tokens', 0)}")
+        lines.append(f"- llm calls: {metrics.get('llm_calls', 0)}")
+        lines.append(f"- tool calls: {metrics.get('tool_calls', 0)}")
+        lines.append(f"- rate-limit retries: {metrics.get('rate_limit_retries', 0)}")
+        lines.append(f"- validation retries: {metrics.get('validation_retries', 0)}")
     if summary["schema_error"]:
         lines.append(f"Schema error: {summary['schema_error']}")
     if summary["runtime_errors"]:

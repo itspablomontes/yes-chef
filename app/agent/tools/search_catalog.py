@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from langchain_core.tools import tool
 
-from app.infrastructure.catalog_index import build_catalog_index
 from app.agent.tools.schemas import SearchCatalogMatchPayload, SearchCatalogResultPayload
+from app.infrastructure.catalog_index import build_catalog_index
 
 
 @tool
