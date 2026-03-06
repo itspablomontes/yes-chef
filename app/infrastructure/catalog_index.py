@@ -88,7 +88,8 @@ class CatalogIndex:
             reader = csv.DictReader(f)
             for row in reader:
                 description = row.get("Product Description", "").strip()
-                if not description: continue
+                if not description:
+                    continue
 
                 entries.append(
                     CatalogEntry(
@@ -161,7 +162,7 @@ class CatalogIndex:
                 distances = vector_results["distances"][0]
                 # Convert distance to similarity score (1 - normalized distance)
                 # Chroma uses L2 distance by default.
-                for vid, dist in zip(ids, distances):
+                for vid, dist in zip(ids, distances, strict=False):
                     sim_score = max(0.0, 100.0 - (dist * 50.0)) # mapping heuristic
                     vector_scores[vid] = sim_score
         except Exception as e:
