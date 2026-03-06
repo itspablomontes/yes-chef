@@ -16,6 +16,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from app.agent.state import EstimationState
 from app.application.progress_observer import EstimationObserver
+from app.application.runtime.event_contract_validator import EventContractValidator
 from app.application.schema_validator import validate_quote_schema
 from app.application.stream_events import (
     EstimationProgressEvent,
@@ -36,6 +37,7 @@ class EstimationOrchestrator:
     def __init__(self, graph: CompiledStateGraph) -> None:
         self._graph = graph
         self._observers: list[EstimationObserver] = []
+        self._event_validator = EventContractValidator()
 
     def add_observer(self, observer: EstimationObserver) -> None:
         """Register an observer for estimation events."""
@@ -178,10 +180,9 @@ class EstimationOrchestrator:
                                         for observer in self._observers:
                                             await observer.on_item_complete(estimation_id, item)
 
-                                        yield {
-                                            "event": "item_complete",
-                                            "data": item,
-                                        }
+                                        event_payload = {"event": "item_complete", "data": item}
+                                        self._event_validator.validate(event_payload)
+                                        yield event_payload
 
                             quote = node_output.get("quote", {})
                             node_status = node_output.get("status")
@@ -194,10 +195,9 @@ class EstimationOrchestrator:
                                 for observer in self._observers:
                                     await observer.on_estimation_complete(estimation_id, quote)
 
-                                yield {
-                                    "event": "quote_complete",
-                                    "data": quote,
-                                }
+                                event_payload = {"event": "quote_complete", "data": quote}
+                                self._event_validator.validate(event_payload)
+                                yield event_payload
             finally:
                 if not graph_task.done():
                     graph_task.cancel()
@@ -219,13 +219,15 @@ class EstimationOrchestrator:
                 },
             }
 
-            yield {
+            event_payload = {
                 "event": "estimation_complete",
                 "data": {
                     "status": final_status or "completed",
                     "items_processed": len(seen_items),
                 },
             }
+            self._event_validator.validate(event_payload)
+            yield event_payload
 
         except Exception as e:
             error_msg = str(e)
@@ -234,7 +236,6 @@ class EstimationOrchestrator:
             for observer in self._observers:
                 await observer.on_error(estimation_id, error_msg)
 
-            yield {
-                "event": "error",
-                "data": {"message": error_msg},
-            }
+            event_payload = {"event": "error", "data": {"message": error_msg}}
+            self._event_validator.validate(event_payload)
+            yield event_payload
