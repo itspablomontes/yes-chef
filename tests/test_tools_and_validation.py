@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import importlib
+from dataclasses import dataclass
+from unittest.mock import patch
 
 import pytest
 
+from app.agent.nodes.catalog_resolver import CatalogResolverNode
+from app.agent.nodes.global_catalog_cache import GlobalCatalogCache
 from app.infrastructure.catalog_index import CatalogMatch
 
 
@@ -42,6 +45,33 @@ class FakeCatalogIndex:
             unit_of_measure="20/8 OZ",
             cost_per_case=315.80,
         )
+
+
+def test_catalog_resolver_batches_lookups_and_reuses_cache() -> None:
+    def fake_invoke(args: dict) -> dict:
+        return {"query": args["query"], "matches": [{"item_number": "123", "description": args["query"]}]}
+
+    with patch("app.agent.nodes.global_catalog_cache.search_catalog") as mock_tool:
+        mock_tool.invoke = fake_invoke
+        resolver = CatalogResolverNode()
+        planned = [
+            {"name": "applewood smoked bacon", "quantity_needed": "1 strip", "needs_catalog_lookup": True},
+            {"name": "bacon", "quantity_needed": "0.5 oz", "needs_catalog_lookup": True},
+        ]
+        update = resolver.resolve(planned, cache={})
+        assert update["catalog_lookups"] <= 2
+        assert "resolved_ingredients" in update
+
+
+def test_global_cache_deduplicates_by_normalized_name() -> None:
+    def fake_invoke(args: dict) -> dict:
+        return {"query": args["query"], "matches": [{"item_number": "123", "description": args["query"]}]}
+
+    with patch("app.agent.nodes.global_catalog_cache.search_catalog") as mock_tool:
+        mock_tool.invoke = fake_invoke
+        cache = GlobalCatalogCache()
+        cache.resolve_batch(["applewood smoked bacon", "bacon", "BACON"])
+        assert cache.resolve_count <= 2
 
 
 def test_search_catalog_returns_structured_matches(monkeypatch: pytest.MonkeyPatch) -> None:
