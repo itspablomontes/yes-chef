@@ -47,10 +47,12 @@ For local runs, omit `--base-url`. Regenerate menus: `uv run python scripts/gene
 
 **Resumability testing:** Use `--test-resume` to simulate an interrupt and verify resume works. Interrupts after N items (default 3, override with `--resume-after`), then resumes via `POST /estimate/{id}/resume`. Works with all existing flags.
 
-| Example | Command |
-| ------- | ------- |
-| Local, interrupt after 3 | `uv run python test_stream.py --file data/menu_spec.json --test-resume` |
+
+| Example                     | Command                                                                                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local, interrupt after 3    | `uv run python test_stream.py --file data/menu_spec.json --test-resume`                                                                        |
 | Deployed, interrupt after 2 | `uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-chef-production.up.railway.app --test-resume --resume-after 2` |
+
 
 **Benchmarking:** Use `test_stream.py` and compare before/after changes: elapsed time, total tokens (`estimation_metrics`), retries and tool call counts, schema validity, quote completion.
 
@@ -191,6 +193,7 @@ flowchart TB
 
 - Evaluate the possibility of external workflow engine (like Temporal) if concurrent long-running jobs become a constraint
 - Structured logging and tracing with Langfuse for observability
+- Improve infra agnosticity with IaC like Terraform
 
 **Retrieval and caching**
 
