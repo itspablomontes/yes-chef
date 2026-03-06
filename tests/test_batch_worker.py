@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage
 from app.agent.contracts.item_pipeline import IngredientPlanPayload, PlannedIngredient
 from app.agent.nodes.batch_worker import ItemWorkerNode
 from app.agent.nodes.ingredient_planner import IngredientPlannerNode
+from app.agent.nodes.planning_pool import PlanningPool
 from app.agent.state import EstimationState
 from app.application.stream_events import bind_progress_event_sink
 from tests.helpers import collect_events, run_async, sample_menu_spec
@@ -59,6 +60,22 @@ def _make_estimation_state_for_item(item_key: str) -> Any:
         knowledge_store={},
         status="in_progress",
     )
+
+
+def test_planning_pool_runs_n_items_concurrently() -> None:
+    fake_llm = FakeLLM()
+    planner = IngredientPlannerNode(llm=fake_llm)
+    pool = PlanningPool(planner=planner, max_concurrency=4)
+    items = [
+        {"name": f"Item {i}", "description": f"Desc {i}", "category": "appetizers", "item_key": f"appetizers:{i}"}
+        for i in range(8)
+    ]
+
+    async def _run() -> None:
+        results = await pool.plan_batch(items, knowledge={})
+        assert len(results) == 8
+
+    run_async(_run())
 
 
 def test_ingredient_planner_returns_structured_plan() -> None:
