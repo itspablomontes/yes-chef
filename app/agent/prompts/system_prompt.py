@@ -1,8 +1,13 @@
-"""System prompt builder for the item worker."""
+"""System prompt builder for the item worker and planning stage."""
 
 from __future__ import annotations
 
 from typing import Any
+
+from app.agent.prompts.planning_prompt import (
+    PLANNING_PROMPT_TEMPLATE,
+    build_planning_context,
+)
 
 SYSTEM_PROMPT_TEMPLATE = """You are a culinary cost estimator for a high-end catering company (Elegant Foods).
 Your job is to decompose a menu item into its component ingredients, find each ingredient in the
