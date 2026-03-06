@@ -1,0 +1,548 @@
+{
+  "event": "Stress Test 100 Items",
+  "date": "2026-03-06",
+  "venue": "Stress Test Kitchen",
+  "guest_count_estimate": 50,
+  "notes": "Stress test with 100 menu items.",
+  "categories": {
+    "appetizers": [
+      {
+        "name": "Bacon-Wrapped Scallops #1",
+        "description": "Pan-seared diver scallops wrapped in applewood-smoked bacon, finished with a maple bourbon glaze",
+        "dietary_notes": "GF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Burrata & Prosciutto Crostini #5",
+        "description": "Creamy burrata cheese, aged prosciutto di Parma, fig jam, and micro arugula on grilled sourdough",
+        "dietary_notes": null,
+        "service_style": "passed"
+      },
+      {
+        "name": "Hamachi Crudo #9",
+        "description": "Yellowtail hamachi with yuzu vinaigrette, thinly sliced jalapeno, fresh cilantro, and Maldon sea salt on crispy rice cakes",
+        "dietary_notes": "GF, DF",
+        "service_style": "stationary"
+      },
+      {
+        "name": "Wagyu New York Strip #13",
+        "description": "10oz Japanese A5 wagyu New York strip with bone marrow butter, roasted garlic confit, charred broccolini, and black truffle jus",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Wild Mushroom & Truffle Risotto #17",
+        "description": "Arborio rice with sauteed wild mushrooms, shaved black truffle, aged Parmigiano-Reggiano, and white truffle oil finish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Meyer Lemon Tart #21",
+        "description": "Meyer lemon curd tart with toasted Italian meringue, candied lemon zest, and edible flowers on a butter shortcrust",
+        "dietary_notes": "V"
+      },
+      {
+        "name": "Lavender French 75 #25",
+        "description": "Hendrick's gin, fresh lemon juice, house-made lavender simple syrup, topped with Veuve Clicquot champagne",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Spicy Mezcal Margarita #29",
+        "description": "Del Maguey Vida mezcal, Cointreau, fresh lime juice, agave nectar, muddled jalapeno, Tajin rim",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Bacon-Wrapped Scallops #33",
+        "description": "Pan-seared diver scallops wrapped in applewood-smoked bacon, finished with a maple bourbon glaze",
+        "dietary_notes": "GF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Burrata & Prosciutto Crostini #37",
+        "description": "Creamy burrata cheese, aged prosciutto di Parma, fig jam, and micro arugula on grilled sourdough",
+        "dietary_notes": null,
+        "service_style": "passed"
+      },
+      {
+        "name": "Hamachi Crudo #41",
+        "description": "Yellowtail hamachi with yuzu vinaigrette, thinly sliced jalapeno, fresh cilantro, and Maldon sea salt on crispy rice cakes",
+        "dietary_notes": "GF, DF",
+        "service_style": "stationary"
+      },
+      {
+        "name": "Wagyu New York Strip #45",
+        "description": "10oz Japanese A5 wagyu New York strip with bone marrow butter, roasted garlic confit, charred broccolini, and black truffle jus",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Wild Mushroom & Truffle Risotto #49",
+        "description": "Arborio rice with sauteed wild mushrooms, shaved black truffle, aged Parmigiano-Reggiano, and white truffle oil finish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Meyer Lemon Tart #53",
+        "description": "Meyer lemon curd tart with toasted Italian meringue, candied lemon zest, and edible flowers on a butter shortcrust",
+        "dietary_notes": "V"
+      },
+      {
+        "name": "Lavender French 75 #57",
+        "description": "Hendrick's gin, fresh lemon juice, house-made lavender simple syrup, topped with Veuve Clicquot champagne",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Spicy Mezcal Margarita #61",
+        "description": "Del Maguey Vida mezcal, Cointreau, fresh lime juice, agave nectar, muddled jalapeno, Tajin rim",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Bacon-Wrapped Scallops #65",
+        "description": "Pan-seared diver scallops wrapped in applewood-smoked bacon, finished with a maple bourbon glaze",
+        "dietary_notes": "GF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Burrata & Prosciutto Crostini #69",
+        "description": "Creamy burrata cheese, aged prosciutto di Parma, fig jam, and micro arugula on grilled sourdough",
+        "dietary_notes": null,
+        "service_style": "passed"
+      },
+      {
+        "name": "Hamachi Crudo #73",
+        "description": "Yellowtail hamachi with yuzu vinaigrette, thinly sliced jalapeno, fresh cilantro, and Maldon sea salt on crispy rice cakes",
+        "dietary_notes": "GF, DF",
+        "service_style": "stationary"
+      },
+      {
+        "name": "Wagyu New York Strip #77",
+        "description": "10oz Japanese A5 wagyu New York strip with bone marrow butter, roasted garlic confit, charred broccolini, and black truffle jus",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Wild Mushroom & Truffle Risotto #81",
+        "description": "Arborio rice with sauteed wild mushrooms, shaved black truffle, aged Parmigiano-Reggiano, and white truffle oil finish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Meyer Lemon Tart #85",
+        "description": "Meyer lemon curd tart with toasted Italian meringue, candied lemon zest, and edible flowers on a butter shortcrust",
+        "dietary_notes": "V"
+      },
+      {
+        "name": "Lavender French 75 #89",
+        "description": "Hendrick's gin, fresh lemon juice, house-made lavender simple syrup, topped with Veuve Clicquot champagne",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Spicy Mezcal Margarita #93",
+        "description": "Del Maguey Vida mezcal, Cointreau, fresh lime juice, agave nectar, muddled jalapeno, Tajin rim",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Bacon-Wrapped Scallops #97",
+        "description": "Pan-seared diver scallops wrapped in applewood-smoked bacon, finished with a maple bourbon glaze",
+        "dietary_notes": "GF",
+        "service_style": "passed"
+      }
+    ],
+    "main_plates": [
+      {
+        "name": "Wagyu Beef Tartare #2",
+        "description": "Hand-cut A5 wagyu beef tartare with quail egg yolk, capers, shallots, and truffle aioli on toasted crostini",
+        "dietary_notes": null,
+        "service_style": "passed"
+      },
+      {
+        "name": "Lobster Bisque Shooters #6",
+        "description": "Smooth lobster bisque served in shot glasses, topped with creme fraiche, chive oil, and a pinch of smoked paprika",
+        "dietary_notes": "GF",
+        "service_style": "stationary"
+      },
+      {
+        "name": "Filet Mignon #10",
+        "description": "8oz center-cut filet mignon with roasted garlic compound butter, truffle mashed potatoes, and grilled asparagus with hollandaise",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Roasted Duck Breast #14",
+        "description": "Pan-roasted Muscovy duck breast with cherry port wine reduction, wild rice pilaf, and sauteed Swiss chard with golden raisins",
+        "dietary_notes": "GF, DF"
+      },
+      {
+        "name": "Classic Creme Brulee #18",
+        "description": "Tahitian vanilla bean creme brulee with fresh seasonal berries and a butter shortbread cookie",
+        "dietary_notes": "GF (without cookie)"
+      },
+      {
+        "name": "Saffron Panna Cotta #22",
+        "description": "Saffron-infused panna cotta with crushed pistachio crumble, rosewater syrup, and candied rose petals",
+        "dietary_notes": "GF, V"
+      },
+      {
+        "name": "Smoked Old Fashioned #26",
+        "description": "Woodford Reserve bourbon, Demerara sugar cube, Angostura and orange bitters, expressed orange peel, applewood smoke finish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Japanese Whisky Highball #30",
+        "description": "Suntory Toki Japanese whisky, chilled sparkling water, expressed lemon peel, served in a tall frozen glass",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Wagyu Beef Tartare #34",
+        "description": "Hand-cut A5 wagyu beef tartare with quail egg yolk, capers, shallots, and truffle aioli on toasted crostini",
+        "dietary_notes": null,
+        "service_style": "passed"
+      },
+      {
+        "name": "Lobster Bisque Shooters #38",
+        "description": "Smooth lobster bisque served in shot glasses, topped with creme fraiche, chive oil, and a pinch of smoked paprika",
+        "dietary_notes": "GF",
+        "service_style": "stationary"
+      },
+      {
+        "name": "Filet Mignon #42",
+        "description": "8oz center-cut filet mignon with roasted garlic compound butter, truffle mashed potatoes, and grilled asparagus with hollandaise",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Roasted Duck Breast #46",
+        "description": "Pan-roasted Muscovy duck breast with cherry port wine reduction, wild rice pilaf, and sauteed Swiss chard with golden raisins",
+        "dietary_notes": "GF, DF"
+      },
+      {
+        "name": "Classic Creme Brulee #50",
+        "description": "Tahitian vanilla bean creme brulee with fresh seasonal berries and a butter shortbread cookie",
+        "dietary_notes": "GF (without cookie)"
+      },
+      {
+        "name": "Saffron Panna Cotta #54",
+        "description": "Saffron-infused panna cotta with crushed pistachio crumble, rosewater syrup, and candied rose petals",
+        "dietary_notes": "GF, V"
+      },
+      {
+        "name": "Smoked Old Fashioned #58",
+        "description": "Woodford Reserve bourbon, Demerara sugar cube, Angostura and orange bitters, expressed orange peel, applewood smoke finish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Japanese Whisky Highball #62",
+        "description": "Suntory Toki Japanese whisky, chilled sparkling water, expressed lemon peel, served in a tall frozen glass",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Wagyu Beef Tartare #66",
+        "description": "Hand-cut A5 wagyu beef tartare with quail egg yolk, capers, shallots, and truffle aioli on toasted crostini",
+        "dietary_notes": null,
+        "service_style": "passed"
+      },
+      {
+        "name": "Lobster Bisque Shooters #70",
+        "description": "Smooth lobster bisque served in shot glasses, topped with creme fraiche, chive oil, and a pinch of smoked paprika",
+        "dietary_notes": "GF",
+        "service_style": "stationary"
+      },
+      {
+        "name": "Filet Mignon #74",
+        "description": "8oz center-cut filet mignon with roasted garlic compound butter, truffle mashed potatoes, and grilled asparagus with hollandaise",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Roasted Duck Breast #78",
+        "description": "Pan-roasted Muscovy duck breast with cherry port wine reduction, wild rice pilaf, and sauteed Swiss chard with golden raisins",
+        "dietary_notes": "GF, DF"
+      },
+      {
+        "name": "Classic Creme Brulee #82",
+        "description": "Tahitian vanilla bean creme brulee with fresh seasonal berries and a butter shortbread cookie",
+        "dietary_notes": "GF (without cookie)"
+      },
+      {
+        "name": "Saffron Panna Cotta #86",
+        "description": "Saffron-infused panna cotta with crushed pistachio crumble, rosewater syrup, and candied rose petals",
+        "dietary_notes": "GF, V"
+      },
+      {
+        "name": "Smoked Old Fashioned #90",
+        "description": "Woodford Reserve bourbon, Demerara sugar cube, Angostura and orange bitters, expressed orange peel, applewood smoke finish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Japanese Whisky Highball #94",
+        "description": "Suntory Toki Japanese whisky, chilled sparkling water, expressed lemon peel, served in a tall frozen glass",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Wagyu Beef Tartare #98",
+        "description": "Hand-cut A5 wagyu beef tartare with quail egg yolk, capers, shallots, and truffle aioli on toasted crostini",
+        "dietary_notes": null,
+        "service_style": "passed"
+      }
+    ],
+    "desserts": [
+      {
+        "name": "Truffle Arancini #3",
+        "description": "Crispy risotto balls filled with black truffle and fontina cheese, served with San Marzano marinara dipping sauce",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      },
+      {
+        "name": "Lamb Lollipops #7",
+        "description": "Grilled New Zealand lamb rib chops with rosemary-mint chimichurri and pomegranate molasses drizzle",
+        "dietary_notes": "GF, DF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Pan-Seared Chilean Sea Bass #11",
+        "description": "Chilean sea bass fillet with saffron beurre blanc, roasted fingerling potatoes, and French haricots verts with shallot butter",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Surf & Turf #15",
+        "description": "Butter-poached Maine lobster tail paired with 6oz filet mignon, bearnaise sauce, loaded twice-baked potato, and grilled asparagus",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Valrhona Chocolate Fondant #19",
+        "description": "Warm Valrhona 70% dark chocolate fondant with raspberry coulis, edible gold leaf, and Madagascar vanilla bean ice cream",
+        "dietary_notes": null
+      },
+      {
+        "name": "Chocolate Truffle Trio #23",
+        "description": "Handcrafted dark, milk, and white chocolate truffles finished with Fleur de Sel, espresso, and champagne flavors",
+        "dietary_notes": "GF, V"
+      },
+      {
+        "name": "Espresso Martini #27",
+        "description": "Grey Goose vodka, Kahlua coffee liqueur, freshly pulled espresso shot, vanilla simple syrup, three coffee bean garnish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Rose Sangria #31",
+        "description": "Whispering Angel rose wine, Chambord black raspberry liqueur, white peach puree, fresh seasonal berries, and mint",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Truffle Arancini #35",
+        "description": "Crispy risotto balls filled with black truffle and fontina cheese, served with San Marzano marinara dipping sauce",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      },
+      {
+        "name": "Lamb Lollipops #39",
+        "description": "Grilled New Zealand lamb rib chops with rosemary-mint chimichurri and pomegranate molasses drizzle",
+        "dietary_notes": "GF, DF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Pan-Seared Chilean Sea Bass #43",
+        "description": "Chilean sea bass fillet with saffron beurre blanc, roasted fingerling potatoes, and French haricots verts with shallot butter",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Surf & Turf #47",
+        "description": "Butter-poached Maine lobster tail paired with 6oz filet mignon, bearnaise sauce, loaded twice-baked potato, and grilled asparagus",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Valrhona Chocolate Fondant #51",
+        "description": "Warm Valrhona 70% dark chocolate fondant with raspberry coulis, edible gold leaf, and Madagascar vanilla bean ice cream",
+        "dietary_notes": null
+      },
+      {
+        "name": "Chocolate Truffle Trio #55",
+        "description": "Handcrafted dark, milk, and white chocolate truffles finished with Fleur de Sel, espresso, and champagne flavors",
+        "dietary_notes": "GF, V"
+      },
+      {
+        "name": "Espresso Martini #59",
+        "description": "Grey Goose vodka, Kahlua coffee liqueur, freshly pulled espresso shot, vanilla simple syrup, three coffee bean garnish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Rose Sangria #63",
+        "description": "Whispering Angel rose wine, Chambord black raspberry liqueur, white peach puree, fresh seasonal berries, and mint",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Truffle Arancini #67",
+        "description": "Crispy risotto balls filled with black truffle and fontina cheese, served with San Marzano marinara dipping sauce",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      },
+      {
+        "name": "Lamb Lollipops #71",
+        "description": "Grilled New Zealand lamb rib chops with rosemary-mint chimichurri and pomegranate molasses drizzle",
+        "dietary_notes": "GF, DF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Pan-Seared Chilean Sea Bass #75",
+        "description": "Chilean sea bass fillet with saffron beurre blanc, roasted fingerling potatoes, and French haricots verts with shallot butter",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Surf & Turf #79",
+        "description": "Butter-poached Maine lobster tail paired with 6oz filet mignon, bearnaise sauce, loaded twice-baked potato, and grilled asparagus",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Valrhona Chocolate Fondant #83",
+        "description": "Warm Valrhona 70% dark chocolate fondant with raspberry coulis, edible gold leaf, and Madagascar vanilla bean ice cream",
+        "dietary_notes": null
+      },
+      {
+        "name": "Chocolate Truffle Trio #87",
+        "description": "Handcrafted dark, milk, and white chocolate truffles finished with Fleur de Sel, espresso, and champagne flavors",
+        "dietary_notes": "GF, V"
+      },
+      {
+        "name": "Espresso Martini #91",
+        "description": "Grey Goose vodka, Kahlua coffee liqueur, freshly pulled espresso shot, vanilla simple syrup, three coffee bean garnish",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Rose Sangria #95",
+        "description": "Whispering Angel rose wine, Chambord black raspberry liqueur, white peach puree, fresh seasonal berries, and mint",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Truffle Arancini #99",
+        "description": "Crispy risotto balls filled with black truffle and fontina cheese, served with San Marzano marinara dipping sauce",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      }
+    ],
+    "cocktails": [
+      {
+        "name": "Sesame Ahi Tuna Bites #4",
+        "description": "Sesame-crusted sashimi-grade ahi tuna on wonton crisps with wasabi cream, pickled ginger, and soy reduction",
+        "dietary_notes": "DF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Wild Mushroom & Gruyere Tartlets #8",
+        "description": "Sauteed wild mushroom duxelles with aged Gruyere in golden puff pastry tartlet shells",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      },
+      {
+        "name": "Herb-Crusted Rack of Lamb #12",
+        "description": "New Zealand rack of lamb with Dijon herb crust, rosemary red wine jus, potato dauphinoise, and roasted root vegetables",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Cedar-Planked Wild Salmon #16",
+        "description": "Wild Alaskan sockeye salmon on cedar plank with dill cream sauce, lemon-herb quinoa pilaf, and roasted seasonal vegetables",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Classic Tiramisu #20",
+        "description": "Traditional Italian tiramisu with espresso-soaked Savoiardi ladyfingers, mascarpone cream, and Dutch cocoa dusting",
+        "dietary_notes": null
+      },
+      {
+        "name": "Wedding Cake (Per Slice) #24",
+        "description": "Three-tier vanilla genoise and champagne cake with Swiss buttercream frosting, fresh flowers, and gold leaf detail",
+        "dietary_notes": "V"
+      },
+      {
+        "name": "Elderflower Spritz #28",
+        "description": "St-Germain elderflower liqueur, La Marca prosecco, soda water, fresh cucumber ribbon and mint sprig",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Garden Spritz (Non-Alcoholic) #32",
+        "description": "Seedlip Garden 108, Fever-Tree elderflower tonic, fresh cucumber, rosemary sprig, and a squeeze of grapefruit",
+        "dietary_notes": "V, GF, NA"
+      },
+      {
+        "name": "Sesame Ahi Tuna Bites #36",
+        "description": "Sesame-crusted sashimi-grade ahi tuna on wonton crisps with wasabi cream, pickled ginger, and soy reduction",
+        "dietary_notes": "DF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Wild Mushroom & Gruyere Tartlets #40",
+        "description": "Sauteed wild mushroom duxelles with aged Gruyere in golden puff pastry tartlet shells",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      },
+      {
+        "name": "Herb-Crusted Rack of Lamb #44",
+        "description": "New Zealand rack of lamb with Dijon herb crust, rosemary red wine jus, potato dauphinoise, and roasted root vegetables",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Cedar-Planked Wild Salmon #48",
+        "description": "Wild Alaskan sockeye salmon on cedar plank with dill cream sauce, lemon-herb quinoa pilaf, and roasted seasonal vegetables",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Classic Tiramisu #52",
+        "description": "Traditional Italian tiramisu with espresso-soaked Savoiardi ladyfingers, mascarpone cream, and Dutch cocoa dusting",
+        "dietary_notes": null
+      },
+      {
+        "name": "Wedding Cake (Per Slice) #56",
+        "description": "Three-tier vanilla genoise and champagne cake with Swiss buttercream frosting, fresh flowers, and gold leaf detail",
+        "dietary_notes": "V"
+      },
+      {
+        "name": "Elderflower Spritz #60",
+        "description": "St-Germain elderflower liqueur, La Marca prosecco, soda water, fresh cucumber ribbon and mint sprig",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Garden Spritz (Non-Alcoholic) #64",
+        "description": "Seedlip Garden 108, Fever-Tree elderflower tonic, fresh cucumber, rosemary sprig, and a squeeze of grapefruit",
+        "dietary_notes": "V, GF, NA"
+      },
+      {
+        "name": "Sesame Ahi Tuna Bites #68",
+        "description": "Sesame-crusted sashimi-grade ahi tuna on wonton crisps with wasabi cream, pickled ginger, and soy reduction",
+        "dietary_notes": "DF",
+        "service_style": "passed"
+      },
+      {
+        "name": "Wild Mushroom & Gruyere Tartlets #72",
+        "description": "Sauteed wild mushroom duxelles with aged Gruyere in golden puff pastry tartlet shells",
+        "dietary_notes": "V",
+        "service_style": "passed"
+      },
+      {
+        "name": "Herb-Crusted Rack of Lamb #76",
+        "description": "New Zealand rack of lamb with Dijon herb crust, rosemary red wine jus, potato dauphinoise, and roasted root vegetables",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Cedar-Planked Wild Salmon #80",
+        "description": "Wild Alaskan sockeye salmon on cedar plank with dill cream sauce, lemon-herb quinoa pilaf, and roasted seasonal vegetables",
+        "dietary_notes": "GF"
+      },
+      {
+        "name": "Classic Tiramisu #84",
+        "description": "Traditional Italian tiramisu with espresso-soaked Savoiardi ladyfingers, mascarpone cream, and Dutch cocoa dusting",
+        "dietary_notes": null
+      },
+      {
+        "name": "Wedding Cake (Per Slice) #88",
+        "description": "Three-tier vanilla genoise and champagne cake with Swiss buttercream frosting, fresh flowers, and gold leaf detail",
+        "dietary_notes": "V"
+      },
+      {
+        "name": "Elderflower Spritz #92",
+        "description": "St-Germain elderflower liqueur, La Marca prosecco, soda water, fresh cucumber ribbon and mint sprig",
+        "dietary_notes": "V, GF"
+      },
+      {
+        "name": "Garden Spritz (Non-Alcoholic) #96",
+        "description": "Seedlip Garden 108, Fever-Tree elderflower tonic, fresh cucumber, rosemary sprig, and a squeeze of grapefruit",
+        "dietary_notes": "V, GF, NA"
+      },
+      {
+        "name": "Sesame Ahi Tuna Bites #100",
+        "description": "Sesame-crusted sashimi-grade ahi tuna on wonton crisps with wasabi cream, pickled ginger, and soy reduction",
+        "dietary_notes": "DF",
+        "service_style": "passed"
+      }
+    ]
+  }
+}
