@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     )
 
     # Required
-    database_url: str = "sqlite+aiosqlite:////app/data/yeschef.db"
+    database_url: str = "sqlite+aiosqlite:///./data/yeschef.db"
     openai_api_key: str = ""
 
     # Optional with defaults
