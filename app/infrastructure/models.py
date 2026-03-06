@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, MetaData, String, func
+from sqlalchemy import JSON, DateTime, Float, ForeignKey, Index, Integer, MetaData, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -54,6 +54,16 @@ class ItemResultModel(Base):
     """ORM model for item_results table."""
 
     __tablename__ = "item_results"
+    __table_args__ = (
+        Index(
+            "uq_item_results_estimation_item_key",
+            "estimation_id",
+            "item_key",
+            unique=True,
+            sqlite_where=text("item_key IS NOT NULL"),
+            postgresql_where=text("item_key IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     estimation_id: Mapped[str] = mapped_column(
@@ -63,6 +73,7 @@ class ItemResultModel(Base):
     category: Mapped[str] = mapped_column(String)
     item_key: Mapped[str | None] = mapped_column(String, nullable=True)
     ingredients_json: Mapped[list[dict[str, object]]] = mapped_column(json_type)
+    telemetry_json: Mapped[dict[str, object]] = mapped_column(json_type, default=dict)
     ingredient_cost_per_unit: Mapped[float] = mapped_column(Float)
     status: Mapped[str] = mapped_column(String, default="completed")
     completed_at: Mapped[datetime] = mapped_column(

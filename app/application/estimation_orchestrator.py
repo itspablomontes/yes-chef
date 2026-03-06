@@ -96,6 +96,16 @@ class EstimationOrchestrator:
             seen_items: set[str] = set()
             quote_emitted = False
             final_status = str(state.status)
+            telemetry_totals: dict[str, float] = {
+                "llm_calls": 0,
+                "tool_calls": 0,
+                "rate_limit_retries": 0,
+                "validation_retries": 0,
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+                "duration_seconds": 0.0,
+            }
 
             event_queue: asyncio.Queue[tuple[str, Any]] = asyncio.Queue()
             graph_task = asyncio.create_task(
@@ -142,6 +152,28 @@ class EstimationOrchestrator:
                                     item_identity = item_key or str(item.get("item_name", ""))
                                     if item_identity and item_identity not in seen_items:
                                         seen_items.add(item_identity)
+                                        telemetry = item.get("telemetry")
+                                        if isinstance(telemetry, dict):
+                                            telemetry_totals["llm_calls"] += float(telemetry.get("llm_calls", 0))
+                                            telemetry_totals["tool_calls"] += float(telemetry.get("tool_calls", 0))
+                                            telemetry_totals["rate_limit_retries"] += float(
+                                                telemetry.get("rate_limit_retries", 0)
+                                            )
+                                            telemetry_totals["validation_retries"] += float(
+                                                telemetry.get("validation_retries", 0)
+                                            )
+                                            telemetry_totals["prompt_tokens"] += float(
+                                                telemetry.get("prompt_tokens", 0)
+                                            )
+                                            telemetry_totals["completion_tokens"] += float(
+                                                telemetry.get("completion_tokens", 0)
+                                            )
+                                            telemetry_totals["total_tokens"] += float(
+                                                telemetry.get("total_tokens", 0)
+                                            )
+                                            telemetry_totals["duration_seconds"] += float(
+                                                telemetry.get("duration_seconds", 0.0)
+                                            )
 
                                         for observer in self._observers:
                                             await observer.on_item_complete(estimation_id, item)
@@ -172,6 +204,21 @@ class EstimationOrchestrator:
                 with suppress(asyncio.CancelledError):
                     await graph_task
                     
+            yield {
+                "event": "estimation_metrics",
+                "data": {
+                    "items_processed": len(seen_items),
+                    "llm_calls": int(telemetry_totals["llm_calls"]),
+                    "tool_calls": int(telemetry_totals["tool_calls"]),
+                    "rate_limit_retries": int(telemetry_totals["rate_limit_retries"]),
+                    "validation_retries": int(telemetry_totals["validation_retries"]),
+                    "prompt_tokens": int(telemetry_totals["prompt_tokens"]),
+                    "completion_tokens": int(telemetry_totals["completion_tokens"]),
+                    "total_tokens": int(telemetry_totals["total_tokens"]),
+                    "duration_seconds": round(float(telemetry_totals["duration_seconds"]), 2),
+                },
+            }
+
             yield {
                 "event": "estimation_complete",
                 "data": {

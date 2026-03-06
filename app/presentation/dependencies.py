@@ -23,7 +23,15 @@ async def get_db_session(request: Request) -> AsyncGenerator[AsyncSession, None]
     """Yield a scoped database session from the app's session factory."""
     session_factory = request.app.state.session_factory
     async with session_factory() as session:
-        yield session
+        try:
+            yield session
+            if not session.sync_session.is_active:
+                await session.rollback()
+                return
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
 
 
 def get_estimation_service(

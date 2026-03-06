@@ -82,6 +82,18 @@ async def ensure_runtime_schema(engine: AsyncEngine) -> None:
 
         if "item_key" not in existing_columns:
             await conn.execute(text("ALTER TABLE item_results ADD COLUMN item_key VARCHAR"))
+        if "telemetry_json" not in existing_columns:
+            await conn.execute(
+                text("ALTER TABLE item_results ADD COLUMN telemetry_json JSON")
+            )
+        await conn.execute(
+            text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS "
+                "uq_item_results_estimation_item_key "
+                "ON item_results (estimation_id, item_key) "
+                "WHERE item_key IS NOT NULL"
+            )
+        )
 
 
 async def get_session(

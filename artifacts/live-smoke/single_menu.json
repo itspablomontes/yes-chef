@@ -1,0 +1,17 @@
+{
+  "event": "Single Item Smoke",
+  "date": "2026-03-06",
+  "venue": "Test Kitchen",
+  "guest_count_estimate": 12,
+  "notes": "Single item validation",
+  "categories": {
+    "appetizers": [
+      {
+        "name": "Bacon-Wrapped Scallops",
+        "description": "Pan-seared diver scallops wrapped in applewood-smoked bacon, finished with a maple bourbon glaze",
+        "dietary_notes": "GF",
+        "service_style": "passed"
+      }
+    ]
+  }
+}
