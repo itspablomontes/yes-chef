@@ -45,6 +45,13 @@ uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-c
 
 For local runs, omit `--base-url`. Regenerate menus: `uv run python scripts/generate_stress_menus.py`.
 
+**Resumability testing:** Use `--test-resume` to simulate an interrupt and verify resume works. Interrupts after N items (default 3, override with `--resume-after`), then resumes via `POST /estimate/{id}/resume`. Works with all existing flags.
+
+| Example | Command |
+| ------- | ------- |
+| Local, interrupt after 3 | `uv run python test_stream.py --file data/menu_spec.json --test-resume` |
+| Deployed, interrupt after 2 | `uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-chef-production.up.railway.app --test-resume --resume-after 2` |
+
 **Benchmarking:** Use `test_stream.py` and compare before/after changes: elapsed time, total tokens (`estimation_metrics`), retries and tool call counts, schema validity, quote completion.
 
 ---
@@ -54,12 +61,13 @@ For local runs, omit `--base-url`. Regenerate menus: `uv run python scripts/gene
 **Base URL:** `https://yes-chef-production.up.railway.app` (or `http://localhost:8000` for local)
 
 
-| Method         | URL / Command                                                                                                                     |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Swagger UI     | [https://yes-chef-production.up.railway.app/docs](https://yes-chef-production.up.railway.app/docs)                                |
-| test_stream.py | `uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-chef-production.up.railway.app`                   |
-| curl (start)   | `curl -N -X POST https://yes-chef-production.up.railway.app/estimate -H "Content-Type: application/json" -d @data/menu_spec.json` |
-| curl (resume)  | `curl -N -X POST https://yes-chef-production.up.railway.app/estimate/{id}/resume`                                                 |
+| Method                    | URL / Command                                                                                                                     |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Swagger UI                | [https://yes-chef-production.up.railway.app/docs](https://yes-chef-production.up.railway.app/docs)                                |
+| test_stream.py            | `uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-chef-production.up.railway.app`                   |
+| test_stream (resume test) | `uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-chef-production.up.railway.app --test-resume`     |
+| curl (start)              | `curl -N -X POST https://yes-chef-production.up.railway.app/estimate -H "Content-Type: application/json" -d @data/menu_spec.json` |
+| curl (resume)             | `curl -N -X POST https://yes-chef-production.up.railway.app/estimate/{id}/resume`                                                 |
 
 
 **Request format:** Menu spec JSON with `event`, `date`, `venue`, `guest_count_estimate`, `notes`, `categories` (see [data/menu_spec.json](data/menu_spec.json)).
@@ -76,6 +84,8 @@ Stats-only SSE endpoints for progress without parsing raw events:
 
 
 **Interrupt:** Close connection (Ctrl+C). Capture `estimation_id` from the first event before interrupting.
+
+**Automated test:** `test_stream.py --test-resume` simulates this flow without manual intervention.
 
 **Resume:** `POST /estimate/{id}/resume/stream` with the captured ID.
 
