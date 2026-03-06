@@ -143,11 +143,16 @@ class ItemWorkerNode:
                 ),
             )
 
+            plan_usage = plan_result.get("usage") or {}
             telemetry = {
                 "llm_calls": 1,
                 "tool_calls": 0,
                 "item_key": item_key,
                 "item_name": item_name,
+                "prompt_tokens": int(plan_usage.get("prompt_tokens", 0)),
+                "completion_tokens": int(plan_usage.get("completion_tokens", 0)),
+                "total_tokens": int(plan_usage.get("total_tokens", 0)),
+                "duration_seconds": float(plan_usage.get("duration_seconds", 0)),
             }
 
             completed_count += 1

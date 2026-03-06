@@ -26,6 +26,7 @@ class LLMClient:
             api_key=settings.openai_api_key,  # type: ignore[arg-type]
             temperature=settings.openai_temperature,
             streaming=True,
+            stream_usage=True,
             max_retries=settings.llm_client_max_retries,
         )
         repair_model = ChatOpenAI(
@@ -33,6 +34,7 @@ class LLMClient:
             api_key=settings.openai_api_key,  # type: ignore[arg-type]
             temperature=settings.openai_repair_temperature,
             streaming=True,
+            stream_usage=True,
             max_retries=settings.llm_client_max_retries,
         )
         return cls(main_model=main_model, repair_model=repair_model)
