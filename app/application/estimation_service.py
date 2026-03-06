@@ -17,6 +17,7 @@ from langgraph.graph.state import CompiledStateGraph
 from app.application.estimation_orchestrator import EstimationOrchestrator
 from app.application.knowledge_store import KnowledgeStore
 from app.application.progress_observer import ProgressObserver
+from app.application.work_units import align_completed_items
 from app.domain.entities import EstimationJob
 from app.domain.repositories import EstimationRepository, ItemResultRepository
 from app.domain.value_objects import EstimationStatus
@@ -86,7 +87,7 @@ class EstimationService:
         initial_state: dict[str, Any] = {
             "estimation_id": estimation_id,
             "menu_spec": menu_spec,
-            "completed_items": [],
+            "completed_items": align_completed_items(menu_spec, []),
             "knowledge_store": {},
             "status": "in_progress",
         }
@@ -129,6 +130,7 @@ class EstimationService:
             item_dict: dict[str, Any] = {
                 "item_name": item.item_name,
                 "category": item.category,
+                "item_key": item.item_key,
                 "ingredients": [
                     {
                         "name": ic.name,
@@ -143,6 +145,7 @@ class EstimationService:
             }
             completed_dicts.append(item_dict)
 
+        completed_dicts = align_completed_items(job.menu_spec_json, completed_dicts)
         knowledge.reconstruct_from_items(completed_dicts)
 
         remaining = job.total_items - len(completed_items)
