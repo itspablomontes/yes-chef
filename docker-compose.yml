@@ -1,0 +1,44 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      chroma:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/yeschef
+      CHROMA_URL: http://chroma:8000
+
+  db:
+    image: bitnami/postgresql
+    environment:
+      POSTGRESQL_USERNAME: postgres
+      POSTGRESQL_PASSWORD: postgres
+      POSTGRESQL_DATABASE: yeschef
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/bitnami/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d yeschef" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8008:8000"
+    environment:
+      IS_PERSISTENT: "TRUE"
+      CHROMA_SERVER_AUTH_PROVIDER: "chromadb.auth.bypass.BypassAuthServerProvider"
+    volumes:
+      - chromadata:/bitnami/chroma
+
+volumes:
+  pgdata:
+  chromadata:
