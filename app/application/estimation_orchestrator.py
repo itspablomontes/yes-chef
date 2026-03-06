@@ -6,14 +6,22 @@ graph events (via astream_events) and dispatching to registered observers.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import AsyncGenerator
+from contextlib import suppress
 from typing import Any
 
 from langgraph.graph.state import CompiledStateGraph
 
 from app.agent.state import EstimationState
 from app.application.progress_observer import EstimationObserver
+from app.application.schema_validator import validate_quote_schema
+from app.application.stream_events import (
+    EstimationProgressEvent,
+    bind_progress_event_sink,
+)
+from app.application.work_units import ITEM_KEY_FIELD
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +45,30 @@ class EstimationOrchestrator:
         """Unregister an observer."""
         self._observers.remove(observer)
 
+    async def _enqueue_graph_events(
+        self,
+        estimation_id: str,
+        state: EstimationState,
+        event_queue: asyncio.Queue[tuple[str, Any]],
+    ) -> None:
+        """Run the graph in the background and enqueue runtime events."""
+
+        async def sink(event: EstimationProgressEvent) -> None:
+            await event_queue.put(("progress", event))
+
+        try:
+            async with bind_progress_event_sink(sink):
+                async for mode, output in self._graph.astream(
+                    state.model_dump(),
+                    config={"configurable": {"thread_id": estimation_id}},
+                    stream_mode=["updates", "messages"],
+                ):
+                    await event_queue.put(("graph", (mode, output)))
+        except Exception as exc:
+            await event_queue.put(("exception", exc))
+        finally:
+            await event_queue.put(("done", None))
+
     async def stream(
         self,
         estimation_id: str,
@@ -53,6 +85,7 @@ class EstimationOrchestrator:
         yield {
             "event": "estimation_started",
             "estimation_id": estimation_id,
+            "data": {"estimation_id": estimation_id},
         }
 
         try:
@@ -61,69 +94,88 @@ class EstimationOrchestrator:
 
             # Track items we've already notified about
             seen_items: set[str] = set()
+            quote_emitted = False
+            final_status = str(state.status)
 
-            # Run the graph with streaming to yield batch updates sequentially
-            async for mode, output in self._graph.astream(
-                state.model_dump(),
-                config={"configurable": {"thread_id": estimation_id}},
-                stream_mode=["updates", "messages"]
-            ):
-                if mode == "messages" and isinstance(output, tuple) and len(output) == 2:
-                    chunk, metadata = output
-                    # Stream intermediate tool calls so the user sees real-time progress
-                    if hasattr(chunk, "tool_call_chunks") and isinstance(
-                        getattr(chunk, "tool_call_chunks", None), list
-                    ):
-                        for tc_chunk in chunk.tool_call_chunks:
-                            # The "name" field is only present in the first chunk of a new tool call
-                            if tc_chunk.get("name"):
-                                tool_name = tc_chunk["name"]
-                                if tool_name != "SaveBatchResult":
-                                    yield {
-                                        "event": "tool_call",
-                                        "data": {"tool": tool_name}
-                                    }
-                    continue
+            event_queue: asyncio.Queue[tuple[str, Any]] = asyncio.Queue()
+            graph_task = asyncio.create_task(
+                self._enqueue_graph_events(estimation_id, state, event_queue)
+            )
 
-                if mode == "updates" and isinstance(output, dict):
-                    for _node_name, node_output in output.items():
-                        if not isinstance(node_output, dict):
-                            continue
+            try:
+                while True:
+                    event_kind, payload = await event_queue.get()
 
-                        # Process completed items from the current batch update
-                        completed_items = node_output.get("completed_items", [])
-                        if isinstance(completed_items, list):
-                            for item in completed_items:
-                                if not isinstance(item, dict):
-                                    continue
-                                item_name = item.get("item_name", "")
-                                if item_name and item_name not in seen_items:
-                                    seen_items.add(item_name)
-
-                                    # Notify observers (e.g. persisting to database)
-                                    for observer in self._observers:
-                                        await observer.on_item_complete(estimation_id, item)
-
-                                    yield {
-                                        "event": "item_complete",
-                                        "data": item,
-                                    }
-
-                        # Get the final quote from the reduce node update
-                        quote = node_output.get("quote", {})
-                        if quote:
-                            for observer in self._observers:
-                                await observer.on_estimation_complete(estimation_id, quote)
-
+                    if event_kind == "progress":
+                        progress_event = payload
+                        if isinstance(progress_event, EstimationProgressEvent):
                             yield {
-                                "event": "quote_complete",
-                                "data": quote,
+                                "event": progress_event.event,
+                                "data": progress_event.data,
                             }
+                        continue
+
+                    if event_kind == "exception":
+                        raise payload
+
+                    if event_kind == "done":
+                        break
+
+                    if event_kind != "graph":
+                        continue
+
+                    mode, output = payload
+                    if mode == "messages" and isinstance(output, tuple) and len(output) == 2:
+                        continue
+
+                    if mode == "updates" and isinstance(output, dict):
+                        for _node_name, node_output in output.items():
+                            if not isinstance(node_output, dict):
+                                continue
+
+                            completed_items = node_output.get("completed_items", [])
+                            if isinstance(completed_items, list):
+                                for item in completed_items:
+                                    if not isinstance(item, dict):
+                                        continue
+                                    item_key = str(item.get(ITEM_KEY_FIELD, ""))
+                                    item_identity = item_key or str(item.get("item_name", ""))
+                                    if item_identity and item_identity not in seen_items:
+                                        seen_items.add(item_identity)
+
+                                        for observer in self._observers:
+                                            await observer.on_item_complete(estimation_id, item)
+
+                                        yield {
+                                            "event": "item_complete",
+                                            "data": item,
+                                        }
+
+                            quote = node_output.get("quote", {})
+                            node_status = node_output.get("status")
+                            if isinstance(node_status, str) and node_status:
+                                final_status = node_status
+
+                            if isinstance(quote, dict) and quote and not quote_emitted:
+                                validate_quote_schema(quote)
+                                quote_emitted = True
+                                for observer in self._observers:
+                                    await observer.on_estimation_complete(estimation_id, quote)
+
+                                yield {
+                                    "event": "quote_complete",
+                                    "data": quote,
+                                }
+            finally:
+                if not graph_task.done():
+                    graph_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await graph_task
                     
             yield {
                 "event": "estimation_complete",
                 "data": {
-                    "status": "completed",
+                    "status": final_status or "completed",
                     "items_processed": len(seen_items),
                 },
             }

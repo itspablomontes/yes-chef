@@ -22,6 +22,7 @@ Tool calls:
 7. search_catalog("bourbon") → No matches found
 8. search_catalog("butter unsalted") → BUTTER, UNSALTED (Sysco #8187926)
 9. get_item_price("8187926", "0.5 tbsp") → $0.04
+10. SaveItemResult(estimation={...single item result...})
 
 Final result:
   item_name: "Bacon-Wrapped Scallops"
@@ -35,4 +36,9 @@ Final result:
   ingredient_cost_per_unit: $6.46
 
 Note: Bourbon is not available in the Sysco catalog (it's a specialty spirit).
-Mark it as not_available with unit_cost: null."""
+Mark it as not_available with unit_cost: null.
+
+Important:
+- Never call `get_item_price` without BOTH `sysco_item_number` and `quantity_needed`.
+- Never call a tool with empty `{}` arguments.
+- Call `SaveItemResult` exactly once for the current item."""

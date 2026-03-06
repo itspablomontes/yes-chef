@@ -104,6 +104,17 @@ class PostgresItemResultRepository:
         self._session = session
 
     async def save(self, result: ItemResult) -> ItemResult:
+        if result.item_key:
+            existing_result = await self._session.execute(
+                select(ItemResultModel).where(
+                    ItemResultModel.estimation_id == result.estimation_id,
+                    ItemResultModel.item_key == result.item_key,
+                )
+            )
+            existing_model = existing_result.scalar_one_or_none()
+            if existing_model is not None:
+                return self._to_entity(existing_model)
+
         model = self._to_model(result)
         self._session.add(model)
         await self._session.commit()
@@ -114,9 +125,9 @@ class PostgresItemResultRepository:
         self, estimation_id: str
     ) -> list[ItemResult]:
         query_result = await self._session.execute(
-            select(ItemResultModel).where(
-                ItemResultModel.estimation_id == estimation_id
-            )
+            select(ItemResultModel)
+            .where(ItemResultModel.estimation_id == estimation_id)
+            .order_by(ItemResultModel.completed_at.asc(), ItemResultModel.id.asc())
         )
         models = query_result.scalars().all()
         return [self._to_entity(m) for m in models]
@@ -138,6 +149,7 @@ class PostgresItemResultRepository:
             estimation_id=entity.estimation_id,
             item_name=entity.item_name,
             category=entity.category,
+            item_key=entity.item_key,
             ingredients_json=ingredients_json,
             ingredient_cost_per_unit=entity.ingredient_cost_per_unit,
             status=entity.status,
@@ -167,6 +179,7 @@ class PostgresItemResultRepository:
             category=model.category,
             ingredients=ingredients,
             ingredient_cost_per_unit=model.ingredient_cost_per_unit,
+            item_key=model.item_key,
             status=model.status,
             completed_at=model.completed_at,
         )

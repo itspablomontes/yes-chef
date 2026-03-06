@@ -90,5 +90,6 @@ class ItemResult:
     category: str
     ingredients: list[IngredientCost]
     ingredient_cost_per_unit: float
+    item_key: str | None = None
     status: str = "completed"
     completed_at: datetime = field(default_factory=datetime.now)

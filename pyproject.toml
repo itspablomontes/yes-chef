@@ -21,6 +21,7 @@ dependencies = [
     "numpy>=2.4.2",
     "httpx>=0.28.1",
     "rich>=14.3.3",
+    "aiosqlite>=0.22.1",
 ]
 
 [dependency-groups]

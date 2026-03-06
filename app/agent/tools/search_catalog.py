@@ -10,10 +10,11 @@ from __future__ import annotations
 from langchain_core.tools import tool
 
 from app.infrastructure.catalog_index import build_catalog_index
+from app.agent.tools.schemas import SearchCatalogMatchPayload, SearchCatalogResultPayload
 
 
 @tool
-def search_catalog(query: str, max_results: int = 5) -> str:
+def search_catalog(query: str, max_results: int = 5) -> dict[str, object]:
     """Search the Sysco supplier catalog for an ingredient.
 
     Args:
@@ -21,27 +22,22 @@ def search_catalog(query: str, max_results: int = 5) -> str:
         max_results: Maximum number of results to return (default 5)
 
     Returns:
-        Formatted string with matching catalog items, scores, and pricing.
-        If no matches found, returns "No matches found" message.
+        Structured catalog candidates for the LLM to reason over.
     """
     index = build_catalog_index()
     results = index.search(query, max_results=max_results)
-
-    if not results:
-        return (
-            f"No matches found for '{query}' in the Sysco catalog. "
-            f"This ingredient may not be available — mark as 'not_available' or 'estimated'."
-        )
-
-    lines = [f"Found {len(results)} match(es) for '{query}':\n"]
-    for i, match in enumerate(results, 1):
-        lines.append(
-            f"{i}. {match.description}\n"
-            f"   Sysco Item #: {match.item_number}\n"
-            f"   Brand: {match.brand}\n"
-            f"   Unit of Measure: {match.unit_of_measure}\n"
-            f"   Case Cost: ${match.cost_per_case:.2f}\n"
-            f"   Match Score: {match.score:.0f}/100\n"
-        )
-
-    return "\n".join(lines)
+    payload = SearchCatalogResultPayload(
+        query=query,
+        matches=[
+            SearchCatalogMatchPayload(
+                item_number=match.item_number,
+                description=match.description,
+                brand=match.brand,
+                unit_of_measure=match.unit_of_measure,
+                cost_per_case=match.cost_per_case,
+                score=match.score,
+            )
+            for match in results
+        ],
+    )
+    return payload.model_dump()

@@ -56,3 +56,4 @@ class EstimationState(BaseModel):
     completed_items: Annotated[list[dict[str, Any]], _add_items] = Field(default_factory=list)
     knowledge_store: dict[str, str] = Field(default_factory=dict)
     status: str = "pending"
+    quote: dict[str, Any] = Field(default_factory=dict)

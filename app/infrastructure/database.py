@@ -1,13 +1,14 @@
 """Async database connection management.
 
 Provides engine creation, session factory, and lifecycle hooks
-for FastAPI's lifespan. Uses asyncpg driver for PostgreSQL.
+for FastAPI's lifespan across SQLite and PostgreSQL backends.
 """
 
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -17,7 +18,7 @@ from sqlalchemy.ext.asyncio import (
 
 
 def _normalize_database_url(url: str) -> str:
-    """Normalize DB URL to use asyncpg driver.
+    """Normalize DB URL to use asyncpg when needed.
 
     Converts 'postgresql://' to 'postgresql+asyncpg://' for driver-agnostic .env files.
     """
@@ -66,6 +67,21 @@ def init_database(
 async def close_database(engine: AsyncEngine) -> None:
     """Dispose of the async engine and its connection pool."""
     await engine.dispose()
+
+
+async def ensure_runtime_schema(engine: AsyncEngine) -> None:
+    """Apply legacy compatibility schema fixes for existing local databases."""
+
+    async with engine.begin() as conn:
+        existing_columns = await conn.run_sync(
+            lambda sync_conn: {
+                column["name"]
+                for column in inspect(sync_conn).get_columns("item_results")
+            }
+        )
+
+        if "item_key" not in existing_columns:
+            await conn.execute(text("ALTER TABLE item_results ADD COLUMN item_key VARCHAR"))
 
 
 async def get_session(

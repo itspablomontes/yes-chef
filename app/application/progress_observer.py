@@ -76,11 +76,19 @@ class ProgressObserver:
             category=str(item_data.get("category", "")),
             ingredients=ingredients,
             ingredient_cost_per_unit=float(item_data.get("ingredient_cost_per_unit") or 0.0),
+            item_key=str(item_data.get("item_key")) if item_data.get("item_key") else None,
             status=str(item_data.get("status", "completed")),
             completed_at=datetime.now(),
         )
 
-        await self._item_result_repo.save(result)
+        saved_result = await self._item_result_repo.save(result)
+        if saved_result.id != result.id:
+            logger.info(
+                "Item '%s' already persisted for key %s; skipping duplicate progress update",
+                saved_result.item_name,
+                saved_result.item_key,
+            )
+            return
 
         # Fetch current job to increment completed count
         job = await self._estimation_repo.get(estimation_id)
