@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.application.graph_builder import GraphBuilder
 from app.infrastructure.catalog_index import build_catalog_index
-from app.infrastructure.database import close_database, init_database
+from app.infrastructure.database import close_database, ensure_runtime_schema, init_database
 from app.infrastructure.llm_client import LLMClient
 from app.infrastructure.settings import get_settings
 from app.presentation.routes import router
@@ -47,6 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await ensure_runtime_schema(engine)
     logger.info("Database tables ensured")
 
     # 3. Build catalog index
