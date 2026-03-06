@@ -1,2 +1,19 @@
 .DS_Store
 _archive/
+.env
+.ruff_cache
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Testing & Typing
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Logs & scratch
+*.log
+*.out
