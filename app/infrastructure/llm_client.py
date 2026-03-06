@@ -23,7 +23,7 @@ class LLMClient:
         model = ChatOpenAI(
             model=settings.openai_model,
             api_key=settings.openai_api_key,  # type: ignore[arg-type]
-            temperature=0.2,
+            temperature=0.0,
             streaming=True,
             max_retries=5,
         )

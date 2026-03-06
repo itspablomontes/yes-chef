@@ -21,13 +21,18 @@ class Settings(BaseSettings):
     )
 
     # Required
-    database_url: str = "sqlite+aiosqlite:///app/data/yeschef.db"
+    database_url: str = "sqlite+aiosqlite:////app/data/yeschef.db"
     openai_api_key: str = ""
 
     # Optional with defaults
     openai_model: str = "gpt-4o-mini"
     chroma_path: str = "/app/data/chroma"
     batch_size: int = 5
+    enable_vector_search: bool = False
+    llm_heartbeat_seconds: int = 3
+    llm_timeout_seconds: int = 90
+    tool_heartbeat_seconds: int = 3
+    tool_timeout_seconds: int = 45
     log_level: str = "INFO"
     app_env: str = "development"
     debug: bool = False

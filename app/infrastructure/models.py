@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, MetaData, String, func
+from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, MetaData, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -20,6 +20,8 @@ convention = {
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
 }
+
+json_type = JSON().with_variant(JSONB, "postgresql")
 
 
 class Base(DeclarativeBase):
@@ -38,8 +40,8 @@ class EstimationJobModel(Base):
     total_items: Mapped[int] = mapped_column(Integer)
     items_completed: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String, default="pending")
-    menu_spec_json: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
-    quote_json: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
+    menu_spec_json: Mapped[dict[str, object]] = mapped_column(json_type, default=dict)
+    quote_json: Mapped[dict[str, object] | None] = mapped_column(json_type, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
     )
@@ -59,7 +61,8 @@ class ItemResultModel(Base):
     )
     item_name: Mapped[str] = mapped_column(String)
     category: Mapped[str] = mapped_column(String)
-    ingredients_json: Mapped[list[dict[str, object]]] = mapped_column(JSONB)
+    item_key: Mapped[str | None] = mapped_column(String, nullable=True)
+    ingredients_json: Mapped[list[dict[str, object]]] = mapped_column(json_type)
     ingredient_cost_per_unit: Mapped[float] = mapped_column(Float)
     status: Mapped[str] = mapped_column(String, default="completed")
     completed_at: Mapped[datetime] = mapped_column(
