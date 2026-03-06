@@ -19,17 +19,20 @@ usage() {
     echo "Options:"
     echo "  --systemd    Install as systemd service (persists across reboots)"
     echo "  --skip-env   Skip .env setup (use existing .env)"
+    echo "  --dry-run    Print planned actions and exit (no Docker build/run)"
     echo "  -h, --help   Show this help"
     exit 0
 }
 
 SKIP_ENV=false
 INSTALL_SYSTEMD=false
+DRY_RUN=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --systemd)   INSTALL_SYSTEMD=true; shift ;;
         --skip-env)   SKIP_ENV=true; shift ;;
+        --dry-run)    DRY_RUN=true; shift ;;
         -h|--help)    usage ;;
         *)            echo "Unknown option: $1"; usage ;;
     esac
@@ -39,6 +42,20 @@ done
 if ! command -v docker &>/dev/null; then
     echo "Error: Docker is required. Install: https://docs.docker.com/engine/install/"
     exit 1
+fi
+
+# Check curl (used for health check)
+if ! command -v curl &>/dev/null; then
+    echo "Error: curl is required for health check. Install curl."
+    exit 1
+fi
+
+# Dry-run: print plan and exit
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo "[dry-run] Would: setup .env (unless --skip-env), create data dir, stop existing container, build image, run container"
+    echo "[dry-run] Repo root: $REPO_ROOT"
+    echo "[dry-run] Data dir: ${DATA_DIR}"
+    exit 0
 fi
 
 # Setup .env
@@ -74,6 +91,19 @@ fi
 mkdir -p "$DATA_DIR"
 echo "Data directory: $DATA_DIR"
 
+# Check port 8000 (avoid cryptic Docker error)
+if command -v ss &>/dev/null; then
+    if ss -tln 2>/dev/null | grep -qE ':8000[^0-9]|:8000$'; then
+        echo "Error: Port 8000 is already in use. Free it first: lsof -ti :8000 | xargs -r kill -9"
+        exit 1
+    fi
+elif command -v netstat &>/dev/null; then
+    if netstat -tln 2>/dev/null | grep -qE ':8000[^0-9]|:8000$'; then
+        echo "Error: Port 8000 is already in use. Free it first: lsof -ti :8000 | xargs -r kill -9"
+        exit 1
+    fi
+fi
+
 # Stop and remove existing container (running or stopped)
 if docker ps -a -q -f "name=${CONTAINER_NAME}" 2>/dev/null | grep -q .; then
     echo "Stopping and removing existing container..."
@@ -103,7 +133,11 @@ while [[ $ELAPSED -lt $MAX_WAIT ]]; do
         echo ""
         echo "Yes Chef API is running at http://localhost:8000"
         echo ""
-        echo "Test: uv run python test_stream.py --file data/menu_spec.json --base-url http://$(hostname -I 2>/dev/null | awk '{print $1}'):8000"
+        VM_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+        echo "Test (local):  uv run python test_stream.py --file data/menu_spec.json --base-url http://localhost:8000"
+        if [[ -n "$VM_IP" ]]; then
+            echo "Test (remote): uv run python test_stream.py --file data/menu_spec.json --base-url http://${VM_IP}:8000"
+        fi
         echo ""
         echo "Logs: docker logs -f $CONTAINER_NAME"
         echo "Stop: docker stop $CONTAINER_NAME"
