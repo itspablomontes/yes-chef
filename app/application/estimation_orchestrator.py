@@ -147,6 +147,8 @@ class EstimationOrchestrator:
 
                             completed_items = node_output.get("completed_items", [])
                             if isinstance(completed_items, list):
+                                # Client disconnect during yield must not prevent persistence.
+                                items_to_emit: list[dict[str, Any]] = []
                                 for item in completed_items:
                                     if not isinstance(item, dict):
                                         continue
@@ -179,10 +181,12 @@ class EstimationOrchestrator:
 
                                         for observer in self._observers:
                                             await observer.on_item_complete(estimation_id, item)
+                                        items_to_emit.append(item)
 
-                                        event_payload = {"event": "item_complete", "data": item}
-                                        self._event_validator.validate(event_payload)
-                                        yield event_payload
+                                for item in items_to_emit:
+                                    event_payload = {"event": "item_complete", "data": item}
+                                    self._event_validator.validate(event_payload)
+                                    yield event_payload
 
                             quote = node_output.get("quote", {})
                             node_status = node_output.get("status")
