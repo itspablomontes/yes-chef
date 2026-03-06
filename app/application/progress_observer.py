@@ -77,6 +77,11 @@ class ProgressObserver:
             ingredients=ingredients,
             ingredient_cost_per_unit=float(item_data.get("ingredient_cost_per_unit") or 0.0),
             item_key=str(item_data.get("item_key")) if item_data.get("item_key") else None,
+            telemetry_json=(
+                item_data.get("telemetry")
+                if isinstance(item_data.get("telemetry"), dict)
+                else {}
+            ),
             status=str(item_data.get("status", "completed")),
             completed_at=datetime.now(),
         )

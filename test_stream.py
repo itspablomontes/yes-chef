@@ -151,6 +151,11 @@ def apply_stream_event(state: StreamRunState, event_payload: dict[str, Any]) -> 
         state.active_tool = "Finalizing quote"
         return
 
+    if event_type == "estimation_metrics":
+        total_tokens = data.get("total_tokens", 0)
+        state.active_tool = f"Run metrics ready (tokens: {total_tokens})"
+        return
+
     if event_type == "estimation_complete":
         state.final_status = str(data.get("status", "completed"))
         state.active_tool = f"Completed ({state.final_status})"

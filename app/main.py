@@ -57,7 +57,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # 4. Build LLM client and graph
     llm_client = LLMClient.from_settings(settings)
-    builder = GraphBuilder(llm=llm_client.model)
+    builder = GraphBuilder(llm_client=llm_client)
     graph = builder.build()
     compiled_graph = graph.compile()
     app.state.compiled_graph = compiled_graph
