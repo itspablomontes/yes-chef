@@ -45,8 +45,6 @@ uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-c
 
 For local runs, omit `--base-url`. Regenerate menus: `uv run python scripts/generate_stress_menus.py`.
 
-**Unit tests (no mocks):** `RUN_LIVE_LLM_TESTS=1 OPENAI_API_KEY=your_key uv run pytest tests/test_live_llm_flow.py -q`
-
 **Benchmarking:** Use `test_stream.py` and compare before/after changes: elapsed time, total tokens (`estimation_metrics`), retries and tool call counts, schema validity, quote completion.
 
 ---
@@ -186,7 +184,7 @@ flowchart TB
 
 **Retrieval and caching**
 
-- Implement Hybrid Search, by using Vector for catalog lookup when fuzzy matching or semantic similarity improves results
+- Implement hybrid search: incorporate vector-based catalog lookups to enhance fuzzy and semantic matching accuracy
 - Ingredient-level caching across estimations (same ingredient + quantity → reuse cost)
 - Catalog pre-indexing or embedding for faster resolution
 
