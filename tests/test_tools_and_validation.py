@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
+from app.agent.validation.schema_repair import repair_line_item
+
 from app.agent.nodes.catalog_resolver import CatalogResolverNode
 from app.agent.nodes.global_catalog_cache import GlobalCatalogCache
 from app.agent.nodes.price_computer import PriceComputerNode
@@ -46,6 +48,18 @@ class FakeCatalogIndex:
             unit_of_measure="20/8 OZ",
             cost_per_case=315.80,
         )
+
+
+def test_repair_fixes_null_ingredient_cost_from_sum() -> None:
+    line = {
+        "ingredient_cost_per_unit": None,
+        "ingredients": [
+            {"name": "a", "quantity": "1 oz", "unit_cost": 1.0, "source": "sysco_catalog"},
+            {"name": "b", "quantity": "2 oz", "unit_cost": 2.0, "source": "sysco_catalog"},
+        ],
+    }
+    repaired = repair_line_item(line)
+    assert repaired["ingredient_cost_per_unit"] == 3.0
 
 
 def test_catalog_resolver_batches_lookups_and_reuses_cache() -> None:
