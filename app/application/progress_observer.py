@@ -7,12 +7,14 @@ The orchestrator fires events; observers react to them.
 from __future__ import annotations
 
 import logging
+import uuid
+from datetime import datetime
 from typing import Any, Protocol
 
 from app.application.runtime.event_contract_validator import EventContractValidator
 from app.domain.entities import ItemResult
 from app.domain.repositories import EstimationRepository, ItemResultRepository
-from app.domain.value_objects import EstimationStatus
+from app.domain.value_objects import EstimationStatus, IngredientCost, IngredientSource
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +59,6 @@ class ProgressObserver:
         self._event_validator.validate(
             {"event": "item_complete", "data": item_data}
         )
-
-        import uuid
-        from datetime import datetime
-
-        # Build domain entity from graph state data
-        from app.domain.value_objects import IngredientCost, IngredientSource
 
         ingredients = [
             IngredientCost(
