@@ -21,12 +21,12 @@ class Settings(BaseSettings):
     )
 
     # Required
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/yeschef"
+    database_url: str = "sqlite+aiosqlite:///app/data/yeschef.db"
     openai_api_key: str = ""
 
     # Optional with defaults
     openai_model: str = "gpt-4o-mini"
-    chroma_url: str = "http://localhost:8008"
+    chroma_path: str = "/app/data/chroma"
     batch_size: int = 5
     log_level: str = "INFO"
     app_env: str = "development"

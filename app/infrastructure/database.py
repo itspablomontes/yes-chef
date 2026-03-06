@@ -40,12 +40,19 @@ def init_database(
     if "localhost" in url or "127.0.0.1" in url:
         connect_args["ssl"] = False
 
+    kwargs = {}
+    if not url.startswith("sqlite"):
+        kwargs = {
+            "pool_size": 5,
+            "max_overflow": 10,
+            "pool_pre_ping": True,
+        }
+
     engine = create_async_engine(
         url,
-        pool_size=5,
-        max_overflow=10,
-        pool_pre_ping=True,
         echo=False,
+        connect_args=connect_args,
+        **kwargs
     )
 
     factory = async_sessionmaker(

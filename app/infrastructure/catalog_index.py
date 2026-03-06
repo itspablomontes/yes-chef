@@ -103,9 +103,8 @@ class CatalogIndex:
                 )
 
         # Initialize Chroma DB (Docker First Approach)
-        client = chromadb.HttpClient(
-            host=settings.chroma_url.replace("http://", "").split(":")[0],
-            port=int(settings.chroma_url.split(":")[-1]) if ":" in settings.chroma_url.replace("http://", "") else 8000
+        client = chromadb.PersistentClient(
+            path=settings.chroma_path
         )
         
         from typing import cast

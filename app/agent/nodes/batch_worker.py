@@ -182,21 +182,13 @@ class BatchWorkerNode:
                     # If LangChain fails to parse the tool arguments into the Pydantic schema
                     error_str = str(e)
                     if "ValidationError" in error_str or "validation error" in error_str.lower():
-                        logger.warning(
-                            "Pydantic Structured Output Validation Failed. Instructing LLM to correct schema: %s",
-                            e
-                        )
-                        messages.append(
-                            AIMessage(content="", tool_calls=[{"name": "SaveBatchResult", "args": {}, "id": "call_failed"}])
-                        )
+                        logger.warning("Pydantic Structured Output Validation Failed. Instructing LLM to correct schema: %s", e)
+                        messages.append(AIMessage(content="", tool_calls=[{"name": "SaveBatchResult", "args": {}, "id": "call_failed"}]))
                         from langchain_core.messages import ToolMessage
-                        messages.append(
-                            ToolMessage(
-                                tool_call_id="call_failed",
-                                name="SaveBatchResult",
-                                content=f"Validation Error: {error_str}\n\nPlease strictly follow the required schema and try calling SaveBatchResult again.",
-                            )
-                        )
+                        messages.append(ToolMessage(
+                            content=f"Your previous call failed schema validation:\n{error_str}\n\nPlease strictly follow the required schema and try calling SaveBatchResult again.",
+                            tool_call_id="call_failed"
+                        ))
                         continue
                     else:
                         raise e
