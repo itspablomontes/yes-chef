@@ -31,6 +31,7 @@ COPY data/ ./data/
 
 # Non-root user
 RUN useradd --create-home appuser
+RUN mkdir -p /app/data && chown -R appuser:appuser /app/data
 USER appuser
 
 # Health check

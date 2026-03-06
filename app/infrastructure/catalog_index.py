@@ -72,6 +72,8 @@ def _parse_cost(cost_str: str) -> float:
 class CatalogIndex:
     """Hybrid search index over the Sysco catalog."""
 
+    _LEXICAL_ONLY_SCORE = 85.0
+
     def __init__(self, entries: list[CatalogEntry], collection: chromadb.Collection) -> None:
         self._entries = entries
         self._collection = collection
@@ -139,6 +141,8 @@ class CatalogIndex:
     ) -> list[CatalogMatch]:
         """Hybrid search combining RapidFuzz lexical match and Chroma vector match."""
         normalized_query = normalize_query(query)
+        entry_map = {e.item_number: e for e in self._entries}
+        settings = get_settings()
 
         # 1. Lexical Search (Fuzzy)
         lexical_scores: dict[str, float] = {}
@@ -146,6 +150,20 @@ class CatalogIndex:
             score = fuzz.token_sort_ratio(normalized_query, entry.normalized)
             if score >= threshold:
                 lexical_scores[entry.item_number] = score
+
+        sorted_lexical = sorted(
+            lexical_scores.items(),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+
+        # For this catalog size, a strong lexical match is both faster and cheaper
+        # than issuing an embedding request for every single tool call.
+        if sorted_lexical and sorted_lexical[0][1] >= self._LEXICAL_ONLY_SCORE:
+            return self._build_matches(sorted_lexical[:max_results], entry_map)
+
+        if not settings.enable_vector_search:
+            return self._build_matches(sorted_lexical[:max_results], entry_map)
 
         # 2. Semantic Search (Vector)
         vector_scores: dict[str, float] = {}
@@ -171,9 +189,8 @@ class CatalogIndex:
         # RRF formula: 1 / (k + rank)
         k = 60
         rrf_scores: dict[str, float] = {}
-        
+
         # Rank Lexical
-        sorted_lexical = sorted(lexical_scores.items(), key=lambda x: x[1], reverse=True)
         for rank, (item_id, _) in enumerate(sorted_lexical):
             rrf_scores[item_id] = rrf_scores.get(item_id, 0.0) + (1.0 / (k + rank + 1))
             
@@ -185,26 +202,33 @@ class CatalogIndex:
         # Sort combined results
         sorted_rrf = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
         
-        # Map back to objects
-        entry_map = {e.item_number: e for e in self._entries}
-        
-        top_matches = []
-        for item_id, rrf_score in sorted_rrf[:max_results]:
-            if item_id in entry_map:
-                entry = entry_map[item_id]
-                # For display, give a blended intuition score 0-100
-                display_score = min(100.0, rrf_score * 3000.0) 
-                top_matches.append(
-                    CatalogMatch(
-                        item_number=entry.item_number,
-                        description=entry.description,
-                        brand=entry.brand,
-                        unit_of_measure=entry.unit_of_measure,
-                        cost_per_case=entry.cost_per_case,
-                        score=round(display_score, 2),
-                    )
+        return self._build_matches(sorted_rrf[:max_results], entry_map, scale_rrf=True)
+
+    def _build_matches(
+        self,
+        scored_ids: list[tuple[str, float]],
+        entry_map: dict[str, CatalogEntry],
+        *,
+        scale_rrf: bool = False,
+    ) -> list[CatalogMatch]:
+        """Map scored item ids back into display-ready catalog matches."""
+        top_matches: list[CatalogMatch] = []
+        for item_id, score in scored_ids:
+            if item_id not in entry_map:
+                continue
+
+            entry = entry_map[item_id]
+            display_score = min(100.0, score * 3000.0) if scale_rrf else score
+            top_matches.append(
+                CatalogMatch(
+                    item_number=entry.item_number,
+                    description=entry.description,
+                    brand=entry.brand,
+                    unit_of_measure=entry.unit_of_measure,
+                    cost_per_case=entry.cost_per_case,
+                    score=round(display_score, 2),
                 )
-                
+            )
         return top_matches
 
     def get_by_item_number(self, item_number: str) -> CatalogEntry | None:

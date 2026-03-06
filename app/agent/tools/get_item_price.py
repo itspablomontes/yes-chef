@@ -10,6 +10,7 @@ import re
 
 from langchain_core.tools import tool
 
+from app.agent.tools.schemas import ItemPriceCalculationPayload, ItemPriceResultPayload
 from app.infrastructure.catalog_index import build_catalog_index
 
 # Unit conversion factors to ounces (base unit)
@@ -141,7 +142,7 @@ def calculate_unit_cost(
 
 
 @tool
-def get_item_price(sysco_item_number: str, quantity_needed: str) -> str:
+def get_item_price(sysco_item_number: str, quantity_needed: str) -> dict[str, object]:
     """Calculate the per-serving cost for a Sysco catalog item.
 
     The math is done deterministically in Python — do NOT attempt to
@@ -153,13 +154,23 @@ def get_item_price(sysco_item_number: str, quantity_needed: str) -> str:
         quantity_needed: Amount needed per serving (e.g., "8 oz", "2 each", "0.5 tbsp")
 
     Returns:
-        Cost breakdown including unit cost, case info, and calculation details.
+        Structured deterministic pricing data for the requested quantity.
     """
     index = build_catalog_index()
     entry = index.get_by_item_number(sysco_item_number)
 
     if entry is None:
-        return f"Sysco item #{sysco_item_number} not found in catalog."
+        return {
+            "sysco_item_number": sysco_item_number,
+            "description": "",
+            "quantity_needed": quantity_needed,
+            "unit_cost": None,
+            "calculation": {
+                "case_cost": 0.0,
+                "case_uom": "",
+                "total_case_quantity": "",
+            },
+        }
 
     result = calculate_unit_cost(
         case_cost=entry.cost_per_case,
@@ -168,12 +179,27 @@ def get_item_price(sysco_item_number: str, quantity_needed: str) -> str:
     )
 
     if "error" in result:
-        return f"Error calculating price: {result['error']}"
+        return {
+            "sysco_item_number": sysco_item_number,
+            "description": entry.description,
+            "quantity_needed": quantity_needed,
+            "unit_cost": None,
+            "calculation": {
+                "case_cost": entry.cost_per_case,
+                "case_uom": entry.unit_of_measure,
+                "total_case_quantity": str(result.get("total_case_quantity", "")),
+            },
+        }
 
-    return (
-        f"Price for {entry.description}:\n"
-        f"  Quantity needed: {quantity_needed}\n"
-        f"  Case: {entry.unit_of_measure} at ${entry.cost_per_case:.2f}\n"
-        f"  Total case quantity: {result['total_case_quantity']}\n"
-        f"  Unit cost for {quantity_needed}: ${result['unit_cost']}\n"
+    payload = ItemPriceResultPayload(
+        sysco_item_number=sysco_item_number,
+        description=entry.description,
+        quantity_needed=quantity_needed,
+        unit_cost=float(result["unit_cost"]) if result["unit_cost"] is not None else None,
+        calculation=ItemPriceCalculationPayload(
+            case_cost=entry.cost_per_case,
+            case_uom=entry.unit_of_measure,
+            total_case_quantity=str(result["total_case_quantity"]),
+        ),
     )
+    return payload.model_dump()
