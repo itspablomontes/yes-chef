@@ -10,7 +10,7 @@ from app.agent.validation.schema_repair import repair_line_item
 
 from app.agent.nodes.catalog_resolver import CatalogResolverNode
 from app.agent.nodes.global_catalog_cache import GlobalCatalogCache
-from app.agent.nodes.price_computer import PriceComputerNode
+from app.agent.nodes.price_computer import PriceComputerNode, _price_cache_key
 from app.infrastructure.catalog_index import CatalogMatch
 
 
@@ -48,6 +48,13 @@ class FakeCatalogIndex:
             unit_of_measure="20/8 OZ",
             cost_per_case=315.80,
         )
+
+
+def test_price_cache_key_format() -> None:
+    """Price cache uses sysco_id::quantity format for deduplication."""
+    key = _price_cache_key("7067228", "1 each")
+    assert key == "7067228::1 each"
+    assert isinstance(key, str)
 
 
 def test_repair_fixes_null_ingredient_cost_from_sum() -> None:

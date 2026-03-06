@@ -7,6 +7,7 @@ for singleton behavior across the application.
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -23,7 +24,7 @@ class Settings(BaseSettings):
     )
 
     # Required
-    database_url: str = "sqlite+aiosqlite:////app/data/yeschef.db"
+    database_url: str = "sqlite+aiosqlite:///./data/yeschef.db"
     openai_api_key: str = ""
 
     # Optional with defaults
@@ -39,6 +40,16 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     app_env: str = "development"
     debug: bool = False
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _database_url_for_env(cls, v: str) -> str:
+        default = "sqlite+aiosqlite:///./data/yeschef.db"
+        if v != default:
+            return v  # User explicitly set; respect it
+        if Path("/.dockerenv").exists():
+            return default  # Docker: primary path
+        return "sqlite+aiosqlite:///./data/yeschef_local.db"  # Local: no conflict
 
     @field_validator("debug", mode="before")
     @classmethod

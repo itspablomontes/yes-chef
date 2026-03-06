@@ -267,6 +267,8 @@ def build_run_summary(
     completed_items: list[dict[str, Any]],
     final_quote: dict[str, Any] | None,
     final_status: str,
+    resumability_tested: bool = False,
+    resume_after: int | None = None,
 ) -> dict[str, Any]:
     schema_valid = False
     schema_error: str | None = None
@@ -288,7 +290,7 @@ def build_run_summary(
                 and ingredient.get("source") == "not_available"
             )
 
-    return {
+    result: dict[str, Any] = {
         "api_reachable": health_check.ready,
         "health_message": health_check.message,
         "health_status_code": health_check.status_code,
@@ -302,6 +304,10 @@ def build_run_summary(
         "runtime_errors": list(state.errors),
         "metrics": dict(state.metrics),
     }
+    if resumability_tested and resume_after is not None:
+        result["resumability_tested"] = True
+        result["resume_after"] = resume_after
+    return result
 
 
 def print_summary_table(items: list[dict[str, Any]], guest_count: int) -> None:
@@ -372,6 +378,10 @@ def print_run_summary(summary: dict[str, Any]) -> None:
         lines.append(f"- tool calls: {metrics.get('tool_calls', 0)}")
         lines.append(f"- rate-limit retries: {metrics.get('rate_limit_retries', 0)}")
         lines.append(f"- validation retries: {metrics.get('validation_retries', 0)}")
+    if summary.get("resumability_tested") and "resume_after" in summary:
+        lines.append(
+            f"Resumability: tested (interrupted after {summary['resume_after']}, resumed successfully)"
+        )
     if summary["schema_error"]:
         lines.append(f"Schema error: {summary['schema_error']}")
     if summary["runtime_errors"]:
@@ -388,11 +398,115 @@ def print_run_summary(summary: dict[str, Any]) -> None:
     )
 
 
+def _process_sse_line(
+    line: str,
+    state: StreamRunState,
+    completed_items: list[dict[str, Any]],
+    total_items: int,
+    progress: Progress,
+    main_task: Any,
+    test_resume: bool,
+    resume_after: int,
+) -> tuple[str, dict[str, Any] | None]:
+    """Process one SSE line. Returns (action, event_data).
+    action: 'break' = interrupt for resume, 'done' = estimation_complete, 'continue' = keep going.
+    """
+    line = line.strip()
+    if not line or not line.startswith("data: "):
+        return "continue", None
+
+    data_str = line.replace("data: ", "", 1)
+    if data_str == "{}":
+        return "continue", None
+
+    try:
+        event_payload = json.loads(data_str)
+    except json.JSONDecodeError as exc:
+        state.errors.append(f"Malformed SSE payload: {exc}")
+        return "continue", None
+
+    apply_stream_event(state, event_payload)
+    event_type = str(event_payload.get("event", ""))
+    raw_data = event_payload.get("data", {})
+    data = raw_data if isinstance(raw_data, dict) else {}
+
+    if event_type == "item_complete":
+        item_name = str(data.get("item_name", "Unknown Item"))
+        console.print(f"[dim green]✓ Item Assessed:[/dim green] {item_name}")
+        completed_items.append(data)
+        progress.update(main_task, completed=min(state.completed_items, total_items))
+        if test_resume and state.completed_items >= resume_after and state.estimation_id:
+            return "break", event_payload
+    elif event_type == "quote_complete":
+        return "continue", event_payload  # caller captures final_quote from event_payload["data"]
+    elif event_type == "estimation_complete":
+        progress.update(main_task, completed=min(state.completed_items, total_items))
+        console.print("[bold green]Orchestration Complete![/bold green]")
+        return "done", event_payload
+
+    return "continue", None
+
+
+async def _stream_until_done(
+    client: httpx.AsyncClient,
+    url: str,
+    json_payload: dict[str, Any] | None,
+    state: StreamRunState,
+    completed_items: list[dict[str, Any]],
+    total_items: int,
+    progress: Progress,
+    main_task: Any,
+    test_resume: bool,
+    resume_after: int,
+) -> tuple[dict[str, Any] | None, str, bool]:
+    """Stream from URL, process events. Returns (final_quote, final_status, interrupted_for_resume)."""
+    final_quote: dict[str, Any] | None = None
+    final_status = "streaming"
+    interrupted = False
+
+    async with client.stream(
+        "POST", url, json=json_payload
+    ) as response:
+        if response.status_code != 200:
+            response_text = await response.aread()
+            error_message = (
+                f"API Error {response.status_code}: "
+                f"{response_text.decode(errors='replace')}"
+            )
+            state.errors.append(error_message)
+            state.active_tool = "Request failed"
+            return None, "error", False
+
+        async for line in response.aiter_lines():
+            action, event_payload = _process_sse_line(
+                line, state, completed_items, total_items, progress, main_task,
+                test_resume, resume_after,
+            )
+            if action == "break":
+                interrupted = True
+                break
+            if action == "done" and event_payload:
+                raw_data = event_payload.get("data", {})
+                data = raw_data if isinstance(raw_data, dict) else {}
+                final_status = str(data.get("status", "completed"))
+                break
+            if action == "continue" and event_payload:
+                event_type = str(event_payload.get("event", ""))
+                raw_data = event_payload.get("data", {})
+                data = raw_data if isinstance(raw_data, dict) else {}
+                if event_type == "quote_complete":
+                    final_quote = data
+
+    return final_quote, final_status, interrupted
+
+
 async def stream_estimation(
     file_path: str,
     *,
     base_url: str = DEFAULT_BASE_URL,
     health_wait_seconds: float = DEFAULT_HEALTH_WAIT_SECONDS,
+    test_resume: bool = False,
+    resume_after: int = 3,
 ) -> int:
     try:
         payload = load_payload(file_path)
@@ -438,53 +552,56 @@ async def stream_estimation(
     main_task = progress.add_task("[cyan]Processing Menu Items...", total=total_items)
     timeout = httpx.Timeout(5.0, read=None)
 
+    resumability_tested = False
     with Live(StreamDashboard(state, progress), console=console, refresh_per_second=4):
         try:
-            async with (
-                httpx.AsyncClient(timeout=timeout) as client,
-                client.stream("POST", f"{base_url.rstrip('/')}/estimate", json=payload) as response,
-            ):
-                if response.status_code != 200:
-                    response_text = await response.aread()
-                    error_message = (
-                        f"API Error {response.status_code}: "
-                        f"{response_text.decode(errors='replace')}"
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                base = base_url.rstrip("/")
+                estimate_url = f"{base}/estimate"
+                effective_test_resume = test_resume and total_items > resume_after
+
+                final_quote, final_status, interrupted = await _stream_until_done(
+                    client,
+                    estimate_url,
+                    payload,
+                    state,
+                    completed_items,
+                    total_items,
+                    progress,
+                    main_task,
+                    effective_test_resume,
+                    resume_after,
+                )
+
+                if (
+                    test_resume
+                    and interrupted
+                    and state.estimation_id
+                    and state.completed_items < total_items
+                ):
+                    console.print(
+                        f"[bold yellow]Interrupting after {resume_after} items to test resume...[/bold yellow]"
                     )
-                    state.errors.append(error_message)
-                    state.active_tool = "Request failed"
-                else:
-                    async for line in response.aiter_lines():
-                        line = line.strip()
-                        if not line or not line.startswith("data: "):
-                            continue
-
-                        data_str = line.replace("data: ", "", 1)
-                        if data_str == "{}":
-                            continue
-
-                        try:
-                            event_payload = json.loads(data_str)
-                        except json.JSONDecodeError as exc:
-                            state.errors.append(f"Malformed SSE payload: {exc}")
-                            continue
-
-                        apply_stream_event(state, event_payload)
-                        event_type = str(event_payload.get("event", ""))
-                        raw_data = event_payload.get("data", {})
-                        data = raw_data if isinstance(raw_data, dict) else {}
-
-                        if event_type == "item_complete":
-                            item_name = str(data.get("item_name", "Unknown Item"))
-                            console.print(f"[dim green]✓ Item Assessed:[/dim green] {item_name}")
-                            completed_items.append(data)
-                            progress.update(main_task, completed=min(state.completed_items, total_items))
-                        elif event_type == "quote_complete":
-                            final_quote = data
-                        elif event_type == "estimation_complete":
-                            final_status = str(data.get("status", "completed"))
-                            progress.update(main_task, completed=min(state.completed_items, total_items))
-                            console.print("[bold green]Orchestration Complete![/bold green]")
-                            break
+                    console.print(f"[dim]Resuming estimation {state.estimation_id}[/dim]")
+                    resume_url = f"{base}/estimate/{state.estimation_id}/resume"
+                    resume_quote, resume_status, _ = await _stream_until_done(
+                        client,
+                        resume_url,
+                        None,
+                        state,
+                        completed_items,
+                        total_items,
+                        progress,
+                        main_task,
+                        False,
+                        resume_after,
+                    )
+                    if resume_quote is not None:
+                        final_quote = resume_quote
+                    if resume_status not in ("streaming", "error"):
+                        final_status = resume_status
+                    if resume_status != "error":
+                        resumability_tested = True
         except httpx.ConnectError:
             state.errors.append(
                 "Connection refused. Is the Docker cluster running via 'docker compose up'?"
@@ -498,6 +615,8 @@ async def stream_estimation(
         completed_items=completed_items,
         final_quote=final_quote,
         final_status=final_status if final_status != "streaming" else state.final_status,
+        resumability_tested=resumability_tested,
+        resume_after=resume_after if resumability_tested else None,
     )
     print_run_summary(summary)
 
@@ -516,6 +635,8 @@ async def main_async(args: argparse.Namespace) -> int:
         args.file,
         base_url=args.base_url,
         health_wait_seconds=args.health_wait_seconds,
+        test_resume=args.test_resume,
+        resume_after=args.resume_after,
     )
 
 
@@ -540,6 +661,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=DEFAULT_HEALTH_WAIT_SECONDS,
         help="How long to wait for Docker health before giving up",
+    )
+    parser.add_argument(
+        "--test-resume",
+        action="store_true",
+        help="Interrupt after N items, then resume to test resumability",
+    )
+    parser.add_argument(
+        "--resume-after",
+        type=int,
+        default=3,
+        help="When --test-resume: interrupt after this many items (default: 3)",
     )
     return parser
 

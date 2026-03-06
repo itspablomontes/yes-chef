@@ -25,6 +25,27 @@ from app.domain.value_objects import EstimationStatus
 logger = logging.getLogger(__name__)
 
 
+def _build_price_cache_from_items(completed_dicts: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Rebuild price_cache from completed items for resume.
+
+    Avoids redundant get_item_price calls when the same (sysco_id, quantity)
+    appears in remaining items.
+    """
+    cache: dict[str, dict[str, Any]] = {}
+    for item in completed_dicts:
+        for ing in item.get("ingredients", []):
+            if not isinstance(ing, dict):
+                continue
+            source = ing.get("source", "")
+            sysco_id = ing.get("sysco_item_number")
+            quantity = ing.get("quantity", "")
+            unit_cost = ing.get("unit_cost")
+            if source == "sysco_catalog" and sysco_id and quantity and unit_cost is not None:
+                key = f"{sysco_id}::{quantity}"
+                cache[key] = {"unit_cost": unit_cost}
+    return cache
+
+
 class EstimationService:
     """High-level service for creating and resuming estimations.
 
@@ -149,6 +170,7 @@ class EstimationService:
 
         completed_dicts = align_completed_items(job.menu_spec_json, completed_dicts)
         knowledge.reconstruct_from_items(completed_dicts)
+        price_cache = _build_price_cache_from_items(completed_dicts)
 
         remaining = job.total_items - len(completed_items)
         logger.info(
@@ -163,7 +185,7 @@ class EstimationService:
             "menu_spec": job.menu_spec_json,
             "completed_items": completed_dicts,
             "knowledge_store": knowledge.get_hints(),
-            "memo_store": {},
+            "memo_store": {"price_cache": price_cache},
             "status": "in_progress",
         }
 

@@ -9,11 +9,267 @@ from app.application.estimation_service import EstimationService
 from app.application.progress_observer import ProgressObserver
 from app.domain.entities import EstimationJob, ItemResult
 from app.domain.value_objects import EstimationStatus, IngredientCost, IngredientSource
+from app.infrastructure.catalog_index import normalize_query
 from app.infrastructure.postgres_repositories import (
     PostgresEstimationRepository,
     PostgresItemResultRepository,
 )
 from tests.helpers import CaptureGraph, collect_events, run_async, sample_menu_spec, setup_sqlite_app_db
+
+
+def _menu_spec_with_wagyu_twice() -> dict:
+    """Menu with Wagyu Beef in two dishes to test carry-forward on resume."""
+    return {
+        "event": "Wagyu Test",
+        "date": "2026-03-06",
+        "venue": "Test",
+        "guest_count_estimate": 10,
+        "notes": "",
+        "categories": {
+            "appetizers": [
+                {"name": "Wagyu Carpaccio", "description": "Wagyu beef carpaccio", "dietary_notes": None},
+                {"name": "Wagyu Sliders", "description": "Mini wagyu beef sliders", "dietary_notes": None},
+            ],
+            "main_plates": [],
+            "desserts": [],
+            "cocktails": [],
+        },
+    }
+
+
+def test_resume_carry_forward_knowledge_store_short_circuits_lookup(tmp_path) -> None:
+    """On resume, knowledge_store from first run is passed to graph; resolver skips re-lookup.
+
+    First run completes one item with 'Wagyu beef' -> not_available. On resume, the
+    reconstructed knowledge_store contains that. The graph receives it; the resolver
+    would use it to skip catalog search (verified in unit tests).
+    """
+    db_path = tmp_path / "carry_forward.sqlite"
+    engine, session_factory = setup_sqlite_app_db(db_path)
+
+    first_run_graph = CaptureGraph(
+        [
+            (
+                "updates",
+                {
+                    "item_worker": {
+                        "completed_items": [
+                            {
+                                "item_name": "Wagyu Carpaccio",
+                                "category": "appetizers",
+                                "item_key": "appetizers:0",
+                                "ingredients": [
+                                    {
+                                        "name": "Wagyu beef",
+                                        "quantity": "2 oz",
+                                        "unit_cost": None,
+                                        "source": "not_available",
+                                        "sysco_item_number": None,
+                                    },
+                                ],
+                                "ingredient_cost_per_unit": 0.0,
+                            }
+                        ]
+                    }
+                },
+            )
+        ]
+    )
+
+    async def _run() -> None:
+        async with session_factory() as session:
+            estimation_repo = PostgresEstimationRepository(session)
+            item_repo = PostgresItemResultRepository(session)
+
+            service = EstimationService(
+                graph=first_run_graph,
+                estimation_repo=estimation_repo,
+                item_result_repo=item_repo,
+            )
+            events = await collect_events(
+                service.create_estimation(_menu_spec_with_wagyu_twice())
+            )
+
+            estimation_id = events[0]["estimation_id"]
+            assert len(first_run_graph.states) >= 1
+
+            resume_graph = CaptureGraph(
+                [
+                    (
+                        "updates",
+                        {
+                            "item_worker": {
+                                "completed_items": [
+                                    {
+                                        "item_name": "Wagyu Sliders",
+                                        "category": "appetizers",
+                                        "item_key": "appetizers:1",
+                                        "ingredients": [
+                                            {
+                                                "name": "Wagyu beef",
+                                                "quantity": "2 oz",
+                                                "unit_cost": None,
+                                                "source": "not_available",
+                                                "sysco_item_number": None,
+                                            },
+                                        ],
+                                        "ingredient_cost_per_unit": 0.0,
+                                    }
+                                ]
+                            }
+                        },
+                    ),
+                    (
+                        "updates",
+                        {
+                            "reduce": {
+                                "status": "completed",
+                                "quote": {
+                                    "quote_id": "q1",
+                                    "event": "Wagyu Test",
+                                    "generated_at": "2026-03-06T00:00:00Z",
+                                    "line_items": [],
+                                },
+                            }
+                        },
+                    ),
+                ]
+            )
+
+            resumed_events = await collect_events(
+                EstimationService(
+                    graph=resume_graph,
+                    estimation_repo=estimation_repo,
+                    item_result_repo=item_repo,
+                ).resume_estimation(estimation_id)
+            )
+
+            assert len(resume_graph.states) >= 1
+            knowledge = resume_graph.states[0].get("knowledge_store", {})
+            wagyu_key = normalize_query("Wagyu beef")
+            assert wagyu_key in knowledge, f"Expected {wagyu_key} in knowledge_store: {knowledge}"
+            assert knowledge[wagyu_key] == "not_available"
+
+        await engine.dispose()
+
+    run_async(_run())
+
+
+def test_resume_rebuilds_price_cache_from_completed_items(tmp_path) -> None:
+    """On resume, memo_store includes price_cache rebuilt from completed items."""
+    db_path = tmp_path / "price_cache.sqlite"
+    engine, session_factory = setup_sqlite_app_db(db_path)
+
+    first_run_graph = CaptureGraph(
+        [
+            (
+                "updates",
+                {
+                    "item_worker": {
+                        "completed_items": [
+                            {
+                                "item_name": "Butter Dish",
+                                "category": "appetizers",
+                                "item_key": "appetizers:0",
+                                "ingredients": [
+                                    {
+                                        "name": "Butter",
+                                        "quantity": "0.5 tbsp",
+                                        "unit_cost": 0.42,
+                                        "source": "sysco_catalog",
+                                        "sysco_item_number": "12345",
+                                    },
+                                    {
+                                        "name": "Salt",
+                                        "quantity": "1 tsp",
+                                        "unit_cost": 0.05,
+                                        "source": "estimated",
+                                        "sysco_item_number": None,
+                                    },
+                                ],
+                                "ingredient_cost_per_unit": 0.47,
+                            }
+                        ]
+                    }
+                },
+            )
+        ]
+    )
+
+    menu_spec = {
+        "event": "Butter Test",
+        "categories": {
+            "appetizers": [
+                {"name": "Butter Dish", "description": "Butter and salt"},
+                {"name": "Another Butter Dish", "description": "Same butter"},
+            ],
+            "main_plates": [],
+            "desserts": [],
+            "cocktails": [],
+        },
+    }
+
+    async def _run() -> None:
+        async with session_factory() as session:
+            estimation_repo = PostgresEstimationRepository(session)
+            item_repo = PostgresItemResultRepository(session)
+
+            service = EstimationService(
+                graph=first_run_graph,
+                estimation_repo=estimation_repo,
+                item_result_repo=item_repo,
+            )
+            events = await collect_events(service.create_estimation(menu_spec))
+            estimation_id = events[0]["estimation_id"]
+
+            resume_graph = CaptureGraph(
+                [
+                    (
+                        "updates",
+                        {
+                            "item_worker": {
+                                "completed_items": [
+                                    {
+                                        "item_name": "Another Butter Dish",
+                                        "category": "appetizers",
+                                        "item_key": "appetizers:1",
+                                        "ingredients": [],
+                                        "ingredient_cost_per_unit": 0.0,
+                                    }
+                                ]
+                            }
+                        },
+                    ),
+                    (
+                        "updates",
+                        {
+                            "reduce": {
+                                "status": "completed",
+                                "quote": {"quote_id": "q1", "generated_at": "2026-03-06T00:00:00Z", "line_items": []},
+                            }
+                        },
+                    ),
+                ]
+            )
+
+            await collect_events(
+                EstimationService(
+                    graph=resume_graph,
+                    estimation_repo=estimation_repo,
+                    item_result_repo=item_repo,
+                ).resume_estimation(estimation_id)
+            )
+
+            assert len(resume_graph.states) >= 1
+            memo = resume_graph.states[0].get("memo_store", {})
+            price_cache = memo.get("price_cache", {})
+            expected_key = "12345::0.5 tbsp"
+            assert expected_key in price_cache, f"Expected {expected_key} in price_cache: {price_cache}"
+            assert price_cache[expected_key].get("unit_cost") == 0.42
+
+        await engine.dispose()
+
+    run_async(_run())
 
 
 def test_estimation_service_create_and_resume_align_small_work_units(tmp_path) -> None:
@@ -100,8 +356,8 @@ def test_estimation_service_create_and_resume_align_small_work_units(tmp_path) -
 
             resumed_completed = resumed_graph.states[0]["completed_items"]
             assert resumed_completed[0]["item_key"] == "appetizers:0"
-            assert resumed_graph.states[0]["knowledge_store"]["sea salt"] == "estimated"
-            assert resumed_graph.states[0]["knowledge_store"]["butter"] == "found:123"
+            assert resumed_graph.states[0]["knowledge_store"][normalize_query("sea salt")] == "estimated"
+            assert resumed_graph.states[0]["knowledge_store"][normalize_query("butter")] == "found:123"
 
         await engine.dispose()
 
@@ -468,6 +724,7 @@ def test_progress_observer_updates_progress_and_quote(tmp_path) -> None:
                 {
                     "item_name": "Steak",
                     "category": "main_plates",
+                    "item_key": "main_plates:0",
                     "ingredients": [
                         {"name": "Beef", "quantity": "8 oz", "unit_cost": 12.0, "source": "sysco_catalog", "sysco_item_number": "999"},
                         {"name": "Salt", "quantity": "1 tsp", "unit_cost": 0.05, "source": "estimated", "sysco_item_number": None},
