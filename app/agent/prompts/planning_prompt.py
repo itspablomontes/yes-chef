@@ -13,7 +13,33 @@ Output a structured list of ingredients for this dish. For each ingredient:
 
 Include ALL ingredients: proteins, garnishes, oils, seasonings.
 
-{item_context}"""
+{item_context}
+{knowledge_hints}"""
+
+
+def format_knowledge_hints(knowledge: dict[str, str]) -> str:
+    """Format knowledge store for prompt injection.
+
+    Returns human-readable lines for known catalog status. Keys are normalized
+    (e.g. "beef wagyu"); we use them as-is for display.
+    """
+    if not knowledge:
+        return ""
+    lines: list[str] = []
+    for key, status in sorted(knowledge.items()):
+        if status == "not_available":
+            lines.append(f"- {key}: not available")
+        elif status == "estimated":
+            lines.append(f"- {key}: estimated")
+        elif status.startswith("found:"):
+            lines.append(f"- {key}: found in Sysco")
+    if not lines:
+        return ""
+    return (
+        "\n\nKnown catalog status (from previous items):\n"
+        + "\n".join(lines)
+        + "\nFor not_available items, set needs_catalog_lookup: false."
+    )
 
 
 def build_planning_context(menu_item: dict[str, Any], category: str) -> str:

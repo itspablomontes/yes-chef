@@ -10,7 +10,11 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.agent.contracts.item_pipeline import IngredientPlanPayload
-from app.agent.prompts.planning_prompt import PLANNING_PROMPT_TEMPLATE, build_planning_context
+from app.agent.prompts.planning_prompt import (
+    PLANNING_PROMPT_TEMPLATE,
+    build_planning_context,
+    format_knowledge_hints,
+)
 from app.agent.state import EstimationState
 from app.application.work_units import ITEM_KEY_FIELD, build_menu_work_units, completed_item_keys
 
@@ -53,7 +57,11 @@ class IngredientPlannerNode:
 
         category = unit.get("category", "appetizers")
         context = build_planning_context(unit, category)
-        prompt = PLANNING_PROMPT_TEMPLATE.format(item_context=context)
+        knowledge_hints = format_knowledge_hints(state.knowledge_store) if state.knowledge_store else ""
+        prompt = PLANNING_PROMPT_TEMPLATE.format(
+            item_context=context,
+            knowledge_hints=knowledge_hints,
+        )
 
         messages = [
             SystemMessage(content=prompt),
@@ -110,7 +118,11 @@ class IngredientPlannerNode:
         """Plan a single item. Used by PlanningPool for parallel execution."""
         category = unit.get("category", "appetizers")
         context = build_planning_context(unit, category)
-        prompt = PLANNING_PROMPT_TEMPLATE.format(item_context=context)
+        knowledge_hints = format_knowledge_hints(knowledge) if knowledge else ""
+        prompt = PLANNING_PROMPT_TEMPLATE.format(
+            item_context=context,
+            knowledge_hints=knowledge_hints,
+        )
 
         messages = [
             SystemMessage(content=prompt),
