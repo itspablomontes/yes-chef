@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +37,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
 
     logger.info("Starting Yes Chef API (env: %s)", settings.app_env)
+
+    # Ensure data dir exists (for SQLite)
+    Path("./data").mkdir(parents=True, exist_ok=True)
 
     # 1. Initialize database
     engine, session_factory = init_database(settings.database_url)

@@ -21,6 +21,7 @@ from app.agent.validation.schema_repair import repair_line_item
 from app.agent.validation.validators import validate_item_estimation
 from app.application.stream_events import emit_progress_event
 from app.application.work_units import ITEM_KEY_FIELD, build_menu_work_units, completed_item_keys
+from app.infrastructure.catalog_index import normalize_query
 from app.infrastructure.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -115,6 +116,7 @@ class ItemWorkerNode:
                 planned,
                 cache=catalog_cache,
                 max_results=get_settings().tool_result_max_matches,
+                knowledge_store=state.knowledge_store,
             )
             total_catalog_lookups = catalog_cache.resolve_count
 
@@ -172,7 +174,7 @@ class ItemWorkerNode:
                     source = ing.get("source")
                     name = ing.get("name")
                     sysco_item_number = ing.get("sysco_item_number")
-                    norm = str(name).lower().strip() if name else ""
+                    norm = normalize_query(str(name)) if name else ""
                     if norm and source == "not_available":
                         new_knowledge[norm] = "not_available"
                     elif norm and source == "estimated":

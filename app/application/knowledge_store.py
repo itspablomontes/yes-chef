@@ -5,11 +5,15 @@ A shared dictionary that accumulates findings from completed items
 a snapshot of the current knowledge at dispatch time.
 
 On resume, the knowledge store is reconstructed from persisted results.
+
+Keys use normalize_query() so they match catalog resolver lookups.
 """
 
 from __future__ import annotations
 
 from typing import Any
+
+from app.infrastructure.catalog_index import normalize_query
 
 
 class KnowledgeStore:
@@ -25,8 +29,10 @@ class KnowledgeStore:
         self._store: dict[str, str] = {}
 
     def update(self, ingredient: str, status: str) -> None:
-        """Record a finding for an ingredient."""
-        key = ingredient.lower().strip()
+        """Record a finding for an ingredient. Key uses normalize_query for catalog alignment."""
+        key = normalize_query(ingredient)
+        if not key:
+            return
         self._store[key] = status
 
     def get_hints(self) -> dict[str, str]:
