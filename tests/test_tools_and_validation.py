@@ -8,6 +8,7 @@ import pytest
 
 from app.agent.nodes.catalog_resolver import CatalogResolverNode
 from app.agent.nodes.global_catalog_cache import GlobalCatalogCache
+from app.agent.nodes.price_computer import PriceComputerNode
 from app.infrastructure.catalog_index import CatalogMatch
 
 
@@ -72,6 +73,29 @@ def test_global_cache_deduplicates_by_normalized_name() -> None:
         cache = GlobalCatalogCache()
         cache.resolve_batch(["applewood smoked bacon", "bacon", "BACON"])
         assert cache.resolve_count <= 2
+
+
+def test_price_computer_uses_cache_and_computes_total(monkeypatch: pytest.MonkeyPatch) -> None:
+    get_item_price_module = importlib.import_module("app.agent.tools.get_item_price")
+    monkeypatch.setattr(
+        get_item_price_module,
+        "build_catalog_index",
+        lambda: FakeCatalogIndex(),
+    )
+
+    node = PriceComputerNode()
+    resolved = [
+        {
+            "name": "bacon",
+            "sysco_item_number": "7067228",
+            "quantity_needed": "2 each",
+            "source": "sysco_catalog",
+        }
+    ]
+    update = node.compute(resolved, price_cache={})
+    assert update["ingredient_cost_per_unit"] is not None
+    assert len(update["priced_ingredients"]) == 1
+    assert update["priced_ingredients"][0]["unit_cost"] is not None
 
 
 def test_search_catalog_returns_structured_matches(monkeypatch: pytest.MonkeyPatch) -> None:
