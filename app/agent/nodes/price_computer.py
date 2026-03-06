@@ -24,6 +24,7 @@ class PriceComputerNode:
         cache = dict(price_cache) if price_cache else {}
         priced: list[dict[str, Any]] = []
         total = 0.0
+        lookup_count = 0
 
         for ing in resolved_ingredients:
             name = ing.get("name", "")
@@ -44,6 +45,7 @@ class PriceComputerNode:
                 if key in cache:
                     result = cache[key]
                 else:
+                    lookup_count += 1
                     result = get_item_price.invoke({
                         "sysco_item_number": sysco_item_number,
                         "quantity_needed": quantity,
@@ -64,4 +66,5 @@ class PriceComputerNode:
             "ingredient_cost_per_unit": round(total, 2),
             "item_stage": "price_computation",
             "price_cache": cache,
+            "price_lookup_count": lookup_count,
         }
