@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     chroma_path: str = "/app/data/chroma"
     batch_size: int = 5
     worker_concurrency: int = 1
+    planning_pool_size: int = 6
     enable_vector_search: bool = False
     llm_heartbeat_seconds: int = 3
     llm_timeout_seconds: int = 90

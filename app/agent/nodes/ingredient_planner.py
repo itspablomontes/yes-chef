@@ -57,3 +57,28 @@ class IngredientPlannerNode:
             "category": category,
             "item_stage": "ingredient_plan",
         }
+
+    async def plan_item(
+        self,
+        unit: dict[str, Any],
+        knowledge: dict[str, str],
+    ) -> dict[str, Any]:
+        """Plan a single item. Used by PlanningPool for parallel execution."""
+        category = unit.get("category", "appetizers")
+        context = build_planning_context(unit, category)
+        prompt = PLANNING_PROMPT_TEMPLATE.format(item_context=context)
+
+        messages = [
+            SystemMessage(content=prompt),
+            HumanMessage(content=f"List the ingredients for: {unit.get('name', 'Unknown')}"),
+        ]
+
+        payload: IngredientPlanPayload = await self._structured_llm.ainvoke(messages)
+        planned = [p.model_dump() for p in payload.ingredients]
+
+        return {
+            "planned_ingredients": planned,
+            "item_key": unit.get(ITEM_KEY_FIELD),
+            "item_name": unit.get("name"),
+            "category": category,
+        }
