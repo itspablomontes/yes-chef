@@ -18,4 +18,4 @@ htmlcov/
 *.log
 *.out
 
-data/yeschef.db
+data/yeschef*.db
