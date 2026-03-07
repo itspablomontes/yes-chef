@@ -108,6 +108,11 @@ def calculate_unit_cost(
             total_items = total_case_qty * 12.0
         else:
             total_items = total_case_qty
+        if total_items <= 0:
+            return {
+                "error": "Invalid UoM: total quantity is 0",
+                "unit_cost": None,
+            }
         cost_per_item = case_cost / total_items
         unit_cost = round(cost_per_item * needed_amount, 2)
     else:

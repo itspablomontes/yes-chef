@@ -60,6 +60,10 @@ class ProgressObserver:
             {"event": "item_complete", "data": item_data}
         )
 
+        item_key_val = item_data.get("item_key")
+        if not item_key_val or not str(item_key_val).strip():
+            raise ValueError("item_complete requires non-empty item_key")
+
         ingredients = [
             IngredientCost(
                 name=str(ing.get("name", "")),
@@ -78,7 +82,7 @@ class ProgressObserver:
             category=str(item_data.get("category", "")),
             ingredients=ingredients,
             ingredient_cost_per_unit=float(item_data.get("ingredient_cost_per_unit") or 0.0),
-            item_key=str(item_data.get("item_key")) if item_data.get("item_key") else None,
+            item_key=str(item_key_val).strip(),
             telemetry_json=(
                 item_data.get("telemetry")
                 if isinstance(item_data.get("telemetry"), dict)
