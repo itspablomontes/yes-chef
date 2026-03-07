@@ -72,6 +72,7 @@ async def stats_stream(
     errors_count = 0
     quote_received = False
     status = "in_progress"
+    final_quote: dict[str, Any] | None = None
 
     async for event in event_gen:
         event_type = str(event.get("event", ""))
@@ -297,6 +298,7 @@ async def stats_stream(
 
         if event_type == "quote_complete":
             quote_received = True
+            final_quote = data if isinstance(data, dict) and data else None
             current_activity = "Finalizing quote"
             yield {
                 "event": "stats",
@@ -337,6 +339,8 @@ async def stats_stream(
                     quote_received=quote_received,
                 ),
             }
+            if final_quote is not None:
+                yield {"event": "quote_complete", "data": final_quote}
             continue
 
         if event_type == "error":
