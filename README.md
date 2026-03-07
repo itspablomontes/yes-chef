@@ -6,6 +6,19 @@ AI agent backend that estimates catering ingredient costs from menu specs using 
 
 ---
 
+## Setup
+
+**Prerequisites:** Python 3.12+, [uv](https://docs.astral.sh/uv/)
+
+```bash
+git clone git@github.com:itspablomontes/yes-chef.git && cd yes-chef
+cp .env.example .env
+# Edit .env and set OPENAI_API_KEY=sk-...
+uv sync
+```
+
+---
+
 ## Interviewer Quick Start
 
 Clone, configure, run, and verify in under 10 minutes:
@@ -14,12 +27,13 @@ Clone, configure, run, and verify in under 10 minutes:
 git clone git@github.com:itspablomontes/yes-chef.git && cd yes-chef
 cp .env.example .env
 # Edit .env and set OPENAI_API_KEY=sk-...
+uv sync
 docker compose up --build -d
 # Wait ~30s for health, then:
 uv run python test_stream.py --file data/menu_spec.json
 ```
 
-Or run locally without Docker: `uv run uvicorn app.main:app --host 0.0.0.0 --port 8000` (requires `uv` and Python 3.12).
+Or run locally without Docker: `uv sync` then `uv run uvicorn app.main:app --host 0.0.0.0 --port 8000` (requires `uv` and Python 3.12).
 
 ---
 
@@ -28,6 +42,7 @@ Or run locally without Docker: `uv run uvicorn app.main:app --host 0.0.0.0 --por
 **Run locally:**
 
 ```bash
+uv sync
 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -43,7 +58,9 @@ uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-c
 
 ## Testing
 
-`test_stream.py` is the primary way to exercise the API: health check, live TUI, final summary (tokens, schema validity).
+**Unit tests:** `uv run pytest tests/ -v --tb=short`
+
+**API exercise:** `test_stream.py` is the primary way to exercise the API: health check, live TUI, final summary (tokens, schema validity).
 
 
 | Target   | Command                                                                                                         |
