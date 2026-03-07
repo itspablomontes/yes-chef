@@ -93,6 +93,8 @@ For local runs, omit `--base-url`. Regenerate menus: `uv run python scripts/gene
 
 **Request format:** Menu spec JSON with `event`, `date`, `venue`, `guest_count_estimate`, `notes`, `categories` (see [data/menu_spec.json](data/menu_spec.json)).
 
+**Output format:** Output conforms to [data/quote_schema.json](data/quote_schema.json) (line_items, ingredients with source/sysco_item_number, ingredient_cost_per_unit).
+
 ### Stats stream (interrupt and resume)
 
 Stats-only SSE endpoints for progress without parsing raw events:
@@ -155,6 +157,7 @@ Requires Docker. Script creates `.env`, builds image, runs container with data v
 
 ## Configuration
 
+**Data files:** Menu spec: [data/menu_spec.json](data/menu_spec.json). Catalog: [data/sysco_catalog.csv](data/sysco_catalog.csv).
 
 | Variable                  | Default                                        | Purpose                        |
 | ------------------------- | ---------------------------------------------- | ------------------------------ |
@@ -171,6 +174,8 @@ Requires Docker. Script creates `.env`, builds image, runs container with data v
 ## Architecture
 
 The system uses a **durable single-item workflow**: one menu item is the unit of work. Each item gets a fresh LLM prompt and bounded knowledge carry-forward. Interrupting loses at most the current batch; resume reconstructs state from persisted completed items.
+
+The design addresses the challenge's architectural concerns: per-item prompts avoid context degradation; per-item checkpointing enables recoverability; SSE events provide observability.
 
 ```mermaid
 flowchart TB
@@ -212,6 +217,8 @@ flowchart TB
 **Graph flow:** `route_work_item` checks for unprocessed items. If any remain, control goes to `item_worker`; otherwise to `reduce`. The item_worker processes a batch of items: **plan** (LLM extracts ingredients per item, parallel via PlanningPool), **resolve** (CatalogResolverNode matches ingredients to Sysco catalog with global cache), **price** (PriceComputerNode computes unit costs). Completed items are persisted by the ProgressObserver. When all items are done, `reduce` aggregates them into the final quote.
 
 **Persistence:** Per-item checkpointing on `item_complete`. KnowledgeStore records catalog hits and misses; on resume it is rebuilt from persisted results so the agent does not re-discover the same failures. No growing chat transcript—each item gets a new prompt.
+
+**Summarization:** Not needed—each item gets a fresh prompt and bounded carry-forward (KnowledgeStore), so there is no long transcript to summarize.
 
 **Resumability:** The system is designed for interrupt-and-resume. If the connection drops or the process is interrupted, capture `estimation_id` from the first event, then call `POST /estimate/{id}/resume` (or `POST /estimate/{id}/resume/stream` for stats-only) to continue. Automated testing: `test_stream.py --test-resume` simulates interrupt-after-N-items and verifies resume works.
 
