@@ -18,8 +18,8 @@ class EstimationRequest(BaseModel):
     """
 
     event: str = Field(description="Event name")
-    date: str = Field(description="Event date")
-    venue: str = Field(description="Venue name")
+    date: str = Field(default="", description="Event date (optional)")
+    venue: str = Field(default="", description="Venue name (optional)")
     guest_count_estimate: int = Field(description="Estimated guest count")
     notes: str = Field(default="", description="Additional notes")
     categories: dict[str, list[dict[str, Any]]] = Field(

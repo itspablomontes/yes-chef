@@ -13,7 +13,11 @@
       "type": "string",
       "description": "Name of the event from the menu specification"
     },
-    
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the quote was generated"
+    },
     "line_items": {
       "type": "array",
       "description": "One entry per menu item from the specification",
@@ -69,6 +73,24 @@
           "ingredient_cost_per_unit": {
             "type": "number",
             "description": "Total ingredient cost per serving, summing all ingredient unit_costs."
+          }
+        }
+      }
+    },
+    "failed_items": {
+      "type": "array",
+      "description": "Menu items that failed during estimation. Present only when status is completed_with_failures or failed.",
+      "items": {
+        "type": "object",
+        "required": ["item_name", "category"],
+        "properties": {
+          "item_name": {
+            "type": "string",
+            "description": "Name of the menu item that failed"
+          },
+          "category": {
+            "type": "string",
+            "description": "Category of the failed item"
           }
         }
       }

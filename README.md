@@ -6,13 +6,47 @@ AI agent backend that estimates catering ingredient costs from menu specs using 
 
 ---
 
+## Setup
+
+**Prerequisites:** Python 3.12+, [uv](https://docs.astral.sh/uv/)
+
+```bash
+git clone git@github.com:itspablomontes/yes-chef.git && cd yes-chef
+cp .env.example .env
+# Edit .env and set OPENAI_API_KEY=sk-...
+uv sync
+```
+
+---
+
+## Interviewer Quick Start
+
+Clone, configure, run, and verify in under 10 minutes:
+
+```bash
+git clone git@github.com:itspablomontes/yes-chef.git && cd yes-chef
+cp .env.example .env
+# Edit .env and set OPENAI_API_KEY=sk-...
+uv sync
+docker compose up --build -d
+# Wait ~30s for health, then:
+uv run python test_stream.py --file data/menu_spec.json
+```
+
+Or run locally without Docker: `uv sync` then `uv run uvicorn app.main:app --host 0.0.0.0 --port 8000` (requires `uv` and Python 3.12).
+
+---
+
 ## Quick start
 
 **Run locally:**
 
 ```bash
+uv sync
 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
+
+Or with Docker: `docker compose up`
 
 **Test against the deployed API:**
 
@@ -24,7 +58,9 @@ uv run python test_stream.py --file data/menu_spec.json --base-url https://yes-c
 
 ## Testing
 
-`test_stream.py` is the primary way to exercise the API: health check, live TUI, final summary (tokens, schema validity).
+**Unit tests:** `uv run pytest tests/ -v --tb=short`
+
+**API exercise:** `test_stream.py` is the primary way to exercise the API: health check, live TUI, final summary (tokens, schema validity).
 
 
 | Target   | Command                                                                                                         |
@@ -74,6 +110,8 @@ For local runs, omit `--base-url`. Regenerate menus: `uv run python scripts/gene
 
 **Request format:** Menu spec JSON with `event`, `date`, `venue`, `guest_count_estimate`, `notes`, `categories` (see [data/menu_spec.json](data/menu_spec.json)).
 
+**Output format:** Output conforms to [data/quote_schema.json](data/quote_schema.json) (line_items, ingredients with source/sysco_item_number, ingredient_cost_per_unit).
+
 ### Stats stream (interrupt and resume)
 
 Stats-only SSE endpoints for progress without parsing raw events:
@@ -106,19 +144,28 @@ curl -N -X POST https://yes-chef-production.up.railway.app/estimate/{id}/resume/
 
 ## Deployment
 
-### PaaS (Railway, Render, Fly.io, etc.)
+Step-by-step runbook for common cloud providers. All paths use the same Dockerfile; differences are in how you provision and configure.
 
-1. Build from Dockerfile (expose port 8000)
-2. Set `OPENAI_API_KEY` (required), `DATABASE_URL` (optional; default SQLite)
-3. For SQLite: persistent volume at `/app/data`
-4. For Postgres: `DATABASE_URL=postgresql://...`
 
-### VM (EC2, DigitalOcean, GCP)
+| Provider                 | Steps                                                                                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Railway**              | 1. New project → Deploy from GitHub. 2. Add variable `OPENAI_API_KEY`. 3. Expose port 8000. 4. (Optional) Add volume at `/app/data` for SQLite persistence.                                                  |
+| **Render**               | 1. New Web Service → Connect repo. 2. Build: Dockerfile (auto-detected). 3. Add env `OPENAI_API_KEY`. 4. Expose port 8000. 5. Add disk at `/app/data` for SQLite persistence.                                |
+| **Fly.io**               | 1. `fly launch` from repo. 2. `fly secrets set OPENAI_API_KEY=sk-...` 3. Ensure `fly.toml` exposes internal port 8000. 4. `fly volumes create data` and mount at `/app/data` for SQLite.                     |
+| **AWS EC2**              | 1. Launch Ubuntu AMI, install Docker. 2. Clone repo, run `./scripts/deploy-vm.sh` (prompts for `OPENAI_API_KEY`). 3. Open security group port 8000. 4. Optional: `--systemd` for persistence across reboots. |
+| **GCP Compute Engine**   | Same as EC2: Ubuntu VM, install Docker, `./scripts/deploy-vm.sh`, open firewall for port 8000.                                                                                                               |
+| **DigitalOcean Droplet** | Same as EC2: Ubuntu, Docker, `./scripts/deploy-vm.sh`, open port 8000 in firewall.                                                                                                                           |
+
+
+**Common requirements:** `OPENAI_API_KEY` (required). `DATABASE_URL` optional (default SQLite). For SQLite persistence on PaaS, ensure a volume is mounted at `/app/data`. For Postgres, set `DATABASE_URL=postgresql://...`.
+
+### VM script (EC2, GCP, DigitalOcean, etc.)
 
 ```bash
 ./scripts/deploy-vm.sh              # Prompts for OPENAI_API_KEY if .env missing
 ./scripts/deploy-vm.sh --skip-env    # Use existing .env
 ./scripts/deploy-vm.sh --systemd    # Start on boot
+./scripts/deploy-vm.sh --dry-run    # Preview without building
 ```
 
 Requires Docker. Script creates `.env`, builds image, runs container with data volume.
@@ -127,15 +174,16 @@ Requires Docker. Script creates `.env`, builds image, runs container with data v
 
 ## Configuration
 
+**Data files:** Menu spec: [data/menu_spec.json](data/menu_spec.json). Catalog: [data/sysco_catalog.csv](data/sysco_catalog.csv).
 
-| Variable                  | Default     | Purpose                        |
-| ------------------------- | ----------- | ------------------------------ |
-| `OPENAI_API_KEY`          | —           | Required                       |
-| `DATABASE_URL`            | SQLite path | Optional                       |
-| `OPENAI_MODEL`            | gpt-4o-mini | Primary model                  |
-| `BATCH_SIZE`              | 5           | Items per batch                |
-| `PLANNING_POOL_SIZE`      | 6           | Parallel planning              |
-| `TOOL_RESULT_MAX_MATCHES` | 3           | Catalog matches per ingredient |
+| Variable                  | Default                                        | Purpose                        |
+| ------------------------- | ---------------------------------------------- | ------------------------------ |
+| `OPENAI_API_KEY`          | —                                              | Required                       |
+| `DATABASE_URL`            | yeschef.db (Docker) / yeschef_local.db (local) | Optional; auto-selected by env |
+| `OPENAI_MODEL`            | gpt-4o-mini                                    | Primary model                  |
+| `BATCH_SIZE`              | 5                                              | Items per batch                |
+| `PLANNING_POOL_SIZE`      | 6                                              | Parallel planning              |
+| `TOOL_RESULT_MAX_MATCHES` | 3                                              | Catalog matches per ingredient |
 
 
 ---
@@ -143,6 +191,8 @@ Requires Docker. Script creates `.env`, builds image, runs container with data v
 ## Architecture
 
 The system uses a **durable single-item workflow**: one menu item is the unit of work. Each item gets a fresh LLM prompt and bounded knowledge carry-forward. Interrupting loses at most the current batch; resume reconstructs state from persisted completed items.
+
+The design addresses the challenge's architectural concerns: per-item prompts avoid context degradation; per-item checkpointing enables recoverability; SSE events provide observability.
 
 ```mermaid
 flowchart TB
@@ -185,6 +235,10 @@ flowchart TB
 
 **Persistence:** Per-item checkpointing on `item_complete`. KnowledgeStore records catalog hits and misses; on resume it is rebuilt from persisted results so the agent does not re-discover the same failures. No growing chat transcript—each item gets a new prompt.
 
+**Summarization:** Not needed—each item gets a fresh prompt and bounded carry-forward (KnowledgeStore), so there is no long transcript to summarize.
+
+**Resumability:** The system is designed for interrupt-and-resume. If the connection drops or the process is interrupted, capture `estimation_id` from the first event, then call `POST /estimate/{id}/resume` (or `POST /estimate/{id}/resume/stream` for stats-only) to continue. Automated testing: `test_stream.py --test-resume` simulates interrupt-after-N-items and verifies resume works.
+
 ---
 
 ## Future improvements
@@ -193,7 +247,6 @@ flowchart TB
 
 - Evaluate the possibility of external workflow engine (like Temporal) if concurrent long-running jobs become a constraint
 - Structured logging and tracing with Langfuse for observability
-- Improve infra agnosticity with IaC like Terraform
 
 **Retrieval and caching**
 

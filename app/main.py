@@ -25,10 +25,24 @@ from app.presentation.routes import router
 logger = logging.getLogger(__name__)
 
 
+def _require_openai_api_key(api_key: str) -> None:
+    """Fail fast with clear message if OPENAI_API_KEY is missing or placeholder."""
+    if not api_key or not api_key.strip():
+        raise SystemExit(
+            "OPENAI_API_KEY is required. Copy .env.example to .env and set OPENAI_API_KEY=sk-..."
+        )
+    placeholder_patterns = ("your-openai-api-key", "sk-your-", "your_key")
+    if any(p in api_key.lower() for p in placeholder_patterns):
+        raise SystemExit(
+            "OPENAI_API_KEY appears to be a placeholder. Set a valid key in .env"
+        )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: startup and shutdown hooks."""
     settings = get_settings()
+    _require_openai_api_key(settings.openai_api_key)
 
     # Configure logging
     logging.basicConfig(

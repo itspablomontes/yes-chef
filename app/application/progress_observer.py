@@ -7,12 +7,14 @@ The orchestrator fires events; observers react to them.
 from __future__ import annotations
 
 import logging
+import uuid
+from datetime import datetime
 from typing import Any, Protocol
 
 from app.application.runtime.event_contract_validator import EventContractValidator
 from app.domain.entities import ItemResult
 from app.domain.repositories import EstimationRepository, ItemResultRepository
-from app.domain.value_objects import EstimationStatus
+from app.domain.value_objects import EstimationStatus, IngredientCost, IngredientSource
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +60,9 @@ class ProgressObserver:
             {"event": "item_complete", "data": item_data}
         )
 
-        import uuid
-        from datetime import datetime
-
-        # Build domain entity from graph state data
-        from app.domain.value_objects import IngredientCost, IngredientSource
+        item_key_val = item_data.get("item_key")
+        if not item_key_val or not str(item_key_val).strip():
+            raise ValueError("item_complete requires non-empty item_key")
 
         ingredients = [
             IngredientCost(
@@ -82,7 +82,7 @@ class ProgressObserver:
             category=str(item_data.get("category", "")),
             ingredients=ingredients,
             ingredient_cost_per_unit=float(item_data.get("ingredient_cost_per_unit") or 0.0),
-            item_key=str(item_data.get("item_key")) if item_data.get("item_key") else None,
+            item_key=str(item_key_val).strip(),
             telemetry_json=(
                 item_data.get("telemetry")
                 if isinstance(item_data.get("telemetry"), dict)

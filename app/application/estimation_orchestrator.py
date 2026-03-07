@@ -179,14 +179,14 @@ class EstimationOrchestrator:
                                                 telemetry.get("duration_seconds", 0.0)
                                             )
 
+                                        event_payload = {"event": "item_complete", "data": item}
+                                        self._event_validator.validate(event_payload)
                                         for observer in self._observers:
                                             await observer.on_item_complete(estimation_id, item)
                                         items_to_emit.append(item)
 
                                 for item in items_to_emit:
-                                    event_payload = {"event": "item_complete", "data": item}
-                                    self._event_validator.validate(event_payload)
-                                    yield event_payload
+                                    yield {"event": "item_complete", "data": item}
 
                             quote = node_output.get("quote", {})
                             node_status = node_output.get("status")
